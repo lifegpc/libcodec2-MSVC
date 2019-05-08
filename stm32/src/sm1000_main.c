@@ -292,7 +292,18 @@ int main(void) {
     adc_open(ADC_FS_16KHZ, 4*ADC_BUF_SZ);
 
     /* Set up FreeDV modem */
-    f = freedv_open(FREEDV_MODE_1600);
+    if (FDV_MODE_ACTIVE( FREEDV_MODE_1600,FREEDV_MODE_1600))
+    {
+    	f = freedv_open(FREEDV_MODE_1600);
+    }
+    else if (FDV_MODE_ACTIVE( FREEDV_MODE_700D, FREEDV_MODE_700D))
+    {
+    	f = freedv_open(FREEDV_MODE_700D);
+    }
+    else
+    {
+	f = NULL; // ADD CODE TO HANDLE NO MODE AVAILABLE
+    }
     n_samples = freedv_get_n_speech_samples(f);
     n_samples_16k = 2*n_samples;
 

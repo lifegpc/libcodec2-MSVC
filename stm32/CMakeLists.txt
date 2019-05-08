@@ -44,7 +44,7 @@ set(CMAKE_TOOLCHAIN_FILE "../stm32/cmake/STM32_Toolchain.cmake" CACHE STRING "To
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu11 -mlittle-endian -mthumb -mthumb-interwork --specs=nano.specs -u_printf_float -mcpu=cortex-m4 -ffunction-sections -fdata-sections")
 
 add_definitions(-DSTM32F40_41xxx -DCORTEX_M4 -D__EMBEDDED__ -DFDV_ARM_MATH)
-add_definitions(-DFREEDV_MODE_EN_DEFAULT=0 -DFREEDV_MODE_1600_EN=1 -DFREEDV_MODE_700D_EN=1 -DCODEC2_MODE_EN_DEFAULT=0 -DCODEC2_MODE_1300_EN=1 -DCODEC2_MODE_700C_EN=1)
+#add_definitions(-DFREEDV_MODE_EN_DEFAULT=0 -DFREEDV_MODE_1600_EN=1 -DFREEDV_MODE_700D_EN=1 -DCODEC2_MODE_EN_DEFAULT=0 -DCODEC2_MODE_1300_EN=1 -DCODEC2_MODE_700C_EN=1)
 
 if(FLOAT_TYPE STREQUAL "hard")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsingle-precision-constant -Wdouble-promotion -mfpu=fpv4-sp-d16 -mfloat-abi=hard -D__FPU_PRESENT=1 -D__FPU_USED=1")
@@ -386,30 +386,14 @@ list(APPEND SM1000_SRCS ${CODEC2_SRCS})
 add_mapped_executable(sm1000 ${SM1000_SRCS} ${SYSTEM_SRCS})
 target_link_libraries(sm1000 stm32f4_adac stm32f4 CMSIS)
 target_compile_options(sm1000 PRIVATE "-O3")
+target_compile_definitions(sm1000 PRIVATE FREEDV_MODE_EN_DEFAULT=0 FREEDV_MODE_1600_EN=1 CODEC2_MODE_EN_DEFAULT=0 CODEC2_MODE_1300_EN=1)
 elf2bin(sm1000)
 
 
-#########################################################
-# SM1000-700D
-set(SM1000_700D_SRCS
-src/sm1000_700d_main.c
-src/tone.c
-src/sfx.c
-src/sounds.c
-src/morse.c
-src/menu.c
-src/tot.c
-src/sm1000_leds_switches.c
-../src/codec2_fifo.c
-src/debugblinky.c
-src/stm32f4_vrom.c
-)
-
-list(APPEND SM1000_700D_SRCS ${CODEC2_SRCS})
-
-add_mapped_executable(sm1000_700d ${SM1000_700D_SRCS} ${SYSTEM_SRCS})
+add_mapped_executable(sm1000_700d ${SM1000_SRCS} ${SYSTEM_SRCS})
 target_link_libraries(sm1000_700d stm32f4_adac stm32f4 CMSIS)
 target_compile_options(sm1000_700d PRIVATE "-O3")
+target_compile_definitions(sm1000_700d PRIVATE FREEDV_MODE_EN_DEFAULT=0  FREEDV_MODE_700D_EN=1 CODEC2_MODE_EN_DEFAULT=0 CODEC2_MODE_700C_EN=1)
 elf2bin(sm1000_700d)
 
 
