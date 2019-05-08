@@ -365,6 +365,8 @@ target_link_libraries(sm1000_leds_switches_ut stm32f4 sm1000base)
 elf2bin(sm1000_leds_switches_ut)
 
 
+#########################################################
+# SM1000
 set(SM1000_SRCS
 src/sm1000_main.c
 src/tone.c
@@ -381,12 +383,37 @@ src/stm32f4_vrom.c
 
 list(APPEND SM1000_SRCS ${CODEC2_SRCS})
 
-
 add_mapped_executable(sm1000 ${SM1000_SRCS} ${SYSTEM_SRCS})
 target_link_libraries(sm1000 stm32f4_adac stm32f4 CMSIS)
 target_compile_options(sm1000 PRIVATE "-O3")
 elf2bin(sm1000)
 
+
+#########################################################
+# SM1000-700D
+set(SM1000_700D_SRCS
+src/sm1000_700d_main.c
+src/tone.c
+src/sfx.c
+src/sounds.c
+src/morse.c
+src/menu.c
+src/tot.c
+src/sm1000_leds_switches.c
+../src/codec2_fifo.c
+src/debugblinky.c
+src/stm32f4_vrom.c
+)
+
+list(APPEND SM1000_700D_SRCS ${CODEC2_SRCS})
+
+add_mapped_executable(sm1000_700d ${SM1000_700D_SRCS} ${SYSTEM_SRCS})
+target_link_libraries(sm1000_700d stm32f4_adac stm32f4 CMSIS)
+target_compile_options(sm1000_700d PRIVATE "-O3")
+elf2bin(sm1000_700d)
+
+
+#########################################################
 set(FREEDV_TX_PROFILE_SRCS
 src/freedv_tx_profile.c
 )
