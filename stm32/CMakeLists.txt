@@ -368,7 +368,6 @@ elf2bin(sm1000_leds_switches_ut)
 #########################################################
 # SM1000
 set(SM1000_SRCS
-src/sm1000_main.c
 src/tone.c
 src/sfx.c
 src/sounds.c
@@ -383,14 +382,14 @@ src/stm32f4_vrom.c
 
 list(APPEND SM1000_SRCS ${CODEC2_SRCS})
 
-add_mapped_executable(sm1000 ${SM1000_SRCS} ${SYSTEM_SRCS})
+add_mapped_executable(sm1000 src/sm1000_main.c ${SM1000_SRCS} ${SYSTEM_SRCS})
 target_link_libraries(sm1000 stm32f4_adac stm32f4 CMSIS)
 target_compile_options(sm1000 PRIVATE "-O3")
 target_compile_definitions(sm1000 PRIVATE FREEDV_MODE_EN_DEFAULT=0 FREEDV_MODE_1600_EN=1 CODEC2_MODE_EN_DEFAULT=0 CODEC2_MODE_1300_EN=1)
 elf2bin(sm1000)
 
 
-add_mapped_executable(sm1000_700d ${SM1000_SRCS} ${SYSTEM_SRCS})
+add_mapped_executable(sm1000_700d src/sm1000_700d_main.c ${SM1000_SRCS} ${SYSTEM_SRCS})
 target_link_libraries(sm1000_700d stm32f4_adac stm32f4 CMSIS)
 target_compile_options(sm1000_700d PRIVATE "-O3")
 target_compile_definitions(sm1000_700d PRIVATE FREEDV_MODE_EN_DEFAULT=0  FREEDV_MODE_700D_EN=1 CODEC2_MODE_EN_DEFAULT=0 CODEC2_MODE_700C_EN=1)
