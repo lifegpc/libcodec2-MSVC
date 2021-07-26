@@ -242,9 +242,9 @@ void tdma_do_tx_frame(tdma_t * tdma, int slot_idx){
     u32 Fs = mode.samp_rate;
     u32 Ts = Fs/Rs;
 
-    COMP mod_samps[(slot_size+1)*Ts];
-    u8 frame_bits[frame_size_bits];
-    u8 mod_bits[nbits];
+    COMP* mod_samps = (COMP*)malloc((slot_size + 1) * Ts * sizeof(COMP));
+    u8* frame_bits = (u8*)malloc(frame_size_bits * sizeof(u8));
+    u8* mod_bits = (u8*)malloc(nbits * sizeof(u8));
     u8 uw_type = 0;
     if(slot == NULL) return;
 
@@ -296,6 +296,9 @@ void tdma_do_tx_frame(tdma_t * tdma, int slot_idx){
     if(tdma->tx_burst_callback != NULL){
         tdma->tx_burst_callback(tdma,mod_samps,Ts*frame_size,tx_timestamp,tdma->tx_burst_cb_data);
     }
+    free(mod_samps);
+    free(frame_bits);
+    free(mod_bits);
 }
 
 /* Pull TDMA frame out of bit stream and call RX CB if present */
@@ -310,7 +313,7 @@ void tdma_deframe_cbcall(u8 demod_bits[], u32 slot_i, tdma_t * tdma, slot_t * sl
     i32 f_start;
     u32 master_max = tdma->settings.mastersat_max;
 
-    u8 frame_bits[frame_size_bits];
+    u8* frame_bits = (u8*)malloc(frame_size_bits * sizeof(u8));
     /* Re-find UW in demod'ed slice */
     /* Should probably just be left to tdma_rx_pilot_sync */
     //off = fvhff_search_uw(demod_bits,n_demod_bits,TDMA_UW_V,uw_len,&delta,bits_per_sym);
@@ -319,6 +322,7 @@ void tdma_deframe_cbcall(u8 demod_bits[], u32 slot_i, tdma_t * tdma, slot_t * sl
 
     /* If frame is not fully in demod bit buffer, there's not much we can do */
     if( (f_start < 0) || ((f_start+frame_size_bits) > n_demod_bits)){
+        free(frame_bits);
         return;
     }
 
@@ -346,6 +350,7 @@ void tdma_deframe_cbcall(u8 demod_bits[], u32 slot_i, tdma_t * tdma, slot_t * sl
     if(tdma->rx_callback != NULL){
         tdma->rx_callback(frame_bits,slot_i,slot,tdma,0,tdma->rx_cb_data);
     }
+    free(frame_bits);
 }
 
 /* We got a new slot's worth of samples. Run the slot modem and try to get slot sync */
@@ -366,9 +371,9 @@ void tdma_rx_pilot_sync(tdma_t * tdma){
     fsk_t * fsk = slot->fsk;
     size_t nbits = (slot_size+1)*bits_per_sym;
     size_t slot_offset = tdma->sample_sync_offset;
-    u8 bit_buf[nbits];
+    u8* bit_buf = (u8*)malloc(nbits * sizeof(u8));
     COMP * sample_buffer = tdma->sample_buffer;
-    COMP frame_samps[(slot_size+1)*Ts];
+    COMP* frame_samps = (COMP*)malloc((slot_size + 1) * Ts * sizeof(COMP));
 
     u32 frame_bits = frame_size*bits_per_sym;
 
@@ -380,6 +385,8 @@ void tdma_rx_pilot_sync(tdma_t * tdma){
         #ifdef VERY_DEBUG
         fprintf(stderr,"Skipping\n");
         #endif
+        free(bit_buf);
+        free(frame_samps);
         return;
     }
 
@@ -591,6 +598,8 @@ void tdma_rx_pilot_sync(tdma_t * tdma){
         tdma->sample_sync_offset = tdma->sample_sync_offset + slot_samps;
         tdma_rx_pilot_sync(tdma);
     }
+    free(bit_buf);
+    free(frame_samps);
 }
 
 /* Attempt at 'plot modem' search for situations where no synchronization is had */
@@ -617,7 +626,7 @@ void tdma_rx_no_sync(tdma_t * tdma, COMP * samps, u64 timestamp){
     u32 n_pilot_bits = (slot_size/2)*bits_per_sym;
     //u32 n_pilot_bits = (slot_size)*bits_per_sym;
     //We look at a full slot for the UW
-    u8 pilot_bits[n_pilot_bits];
+    u8* pilot_bits = (u8*)malloc(n_pilot_bits * sizeof(u8));
 
     /* Start search at the last quarter of the previously rx'ed slot's worth of samples */
     size_t search_offset_i = (3*samps_per_slot)/4;
@@ -662,6 +671,7 @@ void tdma_rx_no_sync(tdma_t * tdma, COMP * samps, u64 timestamp){
           set up for next half slot, repeat 
             next half slot overlaps current slot      
    */
+    free(pilot_bits);
 }
 
 void tdma_rx(tdma_t * tdma, COMP * samps,u64 timestamp){

@@ -18,26 +18,31 @@
 #ifndef __FILTER__
 #define __FILTER__
 
+#include "dllexport.h"
 #include <complex.h>
+
+#if !defined(_MSC_VER) && !defined(_Fcomplex)
+#define _Fcomplex complex float
+#endif
 
 struct quisk_cfFilter {        // Structure to hold the static data for FIR filters
     float * dCoefs;    // real filter coefficients
-    complex float * cpxCoefs;   // complex filter coefficients
+    _Fcomplex* cpxCoefs;   // complex filter coefficients
     int nBuf;          // dimension of cBuf
     int nTaps;         // dimension of dSamples, cSamples, dCoefs
     int decim_index;   // index of next sample for decimation
-    complex float * cSamples;   // storage for old samples
-    complex float * ptcSamp;    // next available position in cSamples
-    complex float * cBuf;       // auxillary buffer for interpolation
+    _Fcomplex* cSamples;   // storage for old samples
+    _Fcomplex* ptcSamp;    // next available position in cSamples
+    _Fcomplex* cBuf;       // auxillary buffer for interpolation
 } ;
 
-extern int quisk_cfInterpDecim(complex float *, int, struct quisk_cfFilter *, int, int);
-extern void quisk_filt_cfInit(struct quisk_cfFilter *, float *, int);
-extern void quisk_filt_destroy(struct quisk_cfFilter *);
-extern void quisk_cfTune(struct quisk_cfFilter *, float);
-extern void quisk_ccfFilter(complex float *, complex float *, int, struct quisk_cfFilter *);
+CODEC2_PUBLIC extern int quisk_cfInterpDecim(_Fcomplex*, int, struct quisk_cfFilter *, int, int);
+CODEC2_PUBLIC extern void quisk_filt_cfInit(struct quisk_cfFilter *, float *, int);
+CODEC2_PUBLIC extern void quisk_filt_destroy(struct quisk_cfFilter *);
+CODEC2_PUBLIC extern void quisk_cfTune(struct quisk_cfFilter *, float);
+CODEC2_PUBLIC extern void quisk_ccfFilter(_Fcomplex*, _Fcomplex*, int, struct quisk_cfFilter *);
 
-extern float quiskFilt120t480[480];
-extern float filtP550S750[160];
+CODEC2_PUBLIC extern float quiskFilt120t480[480];
+CODEC2_PUBLIC extern float filtP550S750[160];
 
 #endif

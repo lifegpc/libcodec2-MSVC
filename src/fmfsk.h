@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include "comp.h"
 #include "modem_stats.h"
+#include "dllexport.h"
 
 #define FMFSK_SCALE 16383
 
@@ -69,23 +70,23 @@ struct FMFSK{
  * int Rb - non-manchester bitrate
  * returns - new struct FMFSK on sucess, NULL on failure
  */
-struct FMFSK * fmfsk_create(int Fs,int Rb);
+CODEC2_PUBLIC struct FMFSK * fmfsk_create(int Fs,int Rb);
 
 /*
  * Destroys an fmfsk modem and deallocates memory
  */
-void fmfsk_destroy(struct FMFSK *fmfsk);
+CODEC2_PUBLIC void fmfsk_destroy(struct FMFSK *fmfsk);
 
 /*
  * Deposit demod statistics into a MODEM_STATS struct
  */
-void fmfsk_get_demod_stats(struct FMFSK *fmfsk,struct MODEM_STATS *stats);
+CODEC2_PUBLIC void fmfsk_get_demod_stats(struct FMFSK *fmfsk,struct MODEM_STATS *stats);
 
 /*
  * Returns the number of samples that must be fed to fmfsk_demod the next
  * cycle
  */
-uint32_t fmfsk_nin(struct FMFSK *fmfsk);
+CODEC2_PUBLIC uint32_t fmfsk_nin(struct FMFSK *fmfsk);
 
 /*
  * Modulates nbit bits into N samples to be sent through an FM radio
@@ -94,7 +95,7 @@ uint32_t fmfsk_nin(struct FMFSK *fmfsk);
  * float mod_out[] - Buffer for N samples of modulated FMFSK
  * uint8_t tx_bits[] - Buffer containing Nbits unpacked bits
  */
-void fmfsk_mod(struct FMFSK *fmfsk, float fmfsk_out[],uint8_t bits_in[]);
+CODEC2_PUBLIC void fmfsk_mod(struct FMFSK *fmfsk, float fmfsk_out[],uint8_t bits_in[]);
 
 
 /*
@@ -105,6 +106,6 @@ void fmfsk_mod(struct FMFSK *fmfsk, float fmfsk_out[],uint8_t bits_in[]);
  * uint8_t rx_bits[] - Buffer for nbit unpacked bits to be written
  * float fsk_in[] - nin samples of modualted FMFSK from an FM radio
  */
-void fmfsk_demod(struct FMFSK *fmfsk, uint8_t rx_bits[],float fmfsk_in[]);
+CODEC2_PUBLIC void fmfsk_demod(struct FMFSK *fmfsk, uint8_t rx_bits[],float fmfsk_in[]);
 
 #endif

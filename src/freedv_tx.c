@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
             int bytes_per_codec_frame = (bits_per_codec_frame + 7) / 8;
             int codec_frames = freedv_get_n_codec_bits(freedv) / bits_per_codec_frame;
             int samples_per_frame = codec2_samples_per_frame(c2);
-            unsigned char encoded[bytes_per_codec_frame * codec_frames];
+            unsigned char* encoded = (unsigned char*)malloc(bytes_per_codec_frame * codec_frames * sizeof(unsigned char));
             unsigned char *enc_frame = encoded;
             short *speech_frame = speech_in;
             float energy = 0;
@@ -272,6 +272,8 @@ int main(int argc, char *argv[]) {
                 /* Use the freedv_api to modulate already encoded frames */
                 freedv_codectx(freedv, mod_out, encoded);
             }
+
+            free(encoded);
         }
 
         if (use_ext_vco) {

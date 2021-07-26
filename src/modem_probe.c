@@ -84,7 +84,7 @@ void * gather_data(datlink * d,size_t * len){
 	void * newbuf = malloc(size);
 	
 	while(cur!=NULL){
-		memcpy(newbuf+i,cur->data,cur->len);
+		memcpy((char*)newbuf+i,cur->data,cur->len);
 		i += cur->len;
 		free(cur->data);
 		next = cur->next;

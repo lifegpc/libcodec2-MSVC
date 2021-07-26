@@ -32,6 +32,10 @@
 #include <complex.h>
 #include "comp.h"
 
+#if !defined(_MSC_VER) && !defined(_Fcomplex)
+#define _Fcomplex complex float
+#endif
+
 #ifdef MODEMPROBE_ENABLE
 
 /* Internal functions */
@@ -94,7 +98,7 @@ static inline void modem_probe_samp_c(char *tracename,COMP samp[],size_t cnt){
  * float complex samp[] - int samples
  * size_t cnt - how many samples to save
  */
-static inline void modem_probe_samp_cft(char *tracename,complex float samp[],size_t cnt){
+static inline void modem_probe_samp_cft(char *tracename,_Fcomplex samp[],size_t cnt){
         modem_probe_samp_c_int(tracename,(COMP*)samp,cnt);
 }
 
@@ -120,7 +124,7 @@ static inline void modem_probe_samp_c(char *name,COMP samp[],size_t cnt){
         return;
 }
 
-static inline void modem_probe_samp_cft(char *name,complex float samp[],size_t cnt){
+static inline void modem_probe_samp_cft(char *name, _Fcomplex samp[],size_t cnt){
         return;
 }
 

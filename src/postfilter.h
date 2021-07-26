@@ -28,6 +28,8 @@
 #ifndef __POSTFILTER__
 #define __POSTFILTER__
 
-void postfilter(MODEL *model, float *bg_est);
+#include "dllexport.h"
+
+CODEC2_PUBLIC void postfilter(MODEL *model, float *bg_est);
 
 #endif

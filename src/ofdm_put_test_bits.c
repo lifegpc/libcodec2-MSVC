@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     ofdm_config = ofdm_get_config_param();
 
     int Nbitsperframe = ofdm_get_bits_per_frame();
-    char rx_bits[Nbitsperframe];
+    char* rx_bits = (char*)malloc(Nbitsperframe);
   
     f = Terrs = Tbits = Terrs2 = Tbits2 = 0;
     while (fread(rx_bits, sizeof(char), Nbitsperframe, fin) == Nbitsperframe) {
@@ -131,6 +131,8 @@ int main(int argc, char *argv[])
     }
 
     ofdm_destroy(ofdm);
+
+    free(rx_bits);
 
     return 0;
 }

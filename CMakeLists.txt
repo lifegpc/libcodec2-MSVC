@@ -60,7 +60,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set default C flags.
+if (NOT MSVC)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-strict-overflow")
+else()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4305 /wd4244 /wd4996 /wd4267 ")
+endif()
 
 # Check for what C standard is supported.
 include(CheckCCompilerFlag)
@@ -71,7 +75,7 @@ if(COMPILER_SUPPORTS_GNU11)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
 elseif(COMPILER_SUPPORTS_GNU99)
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
-else()
+elseif(NOT MSVC)
    message(SEND_ERROR "Compiler doesn't seem to support at least gnu99, might cause problems" )
 endif()
 
@@ -80,8 +84,10 @@ if(NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
+if (NOT MSVC)
 set(CMAKE_C_FLAGS_DEBUG "-g -O2 -DDUMP")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
+endif()
 
 #
 # Setup Windows/MinGW specifics here.
@@ -174,6 +180,12 @@ check_symbol_exists(log10  math.h   HAVE_LOG10)
 check_symbol_exists(round  math.h   HAVE_ROUND)
 check_symbol_exists(getopt getopt.h HAVE_GETOPT)
 
+if ("${HAVE_GETOPT}" STREQUAL "")
+    add_library(getopt STATIC getopt/getopt_core.h getopt/getopt_ext.h getopt/getopt_int.h
+    getopt/getopt.c getopt/getopt.h getopt/getopt1.c)
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/getopt")
+endif()
+
 configure_file ("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
                 "${PROJECT_BINARY_DIR}/config.h" )
 # Output path is such that #include <codec2/version.h> in codec2.h works
@@ -255,10 +267,10 @@ if(WIN32)
     if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
         set(CMAKE_CL_64 TRUE)
     endif()
-    configure_file(cmake/GetDependencies.cmake.in cmake/GetDependencies.cmake
-        @ONLY
-    )
-    install(SCRIPT ${CMAKE_BINARY_DIR}/cmake/GetDependencies.cmake)
+    #configure_file(cmake/GetDependencies.cmake.in cmake/GetDependencies.cmake
+    #    @ONLY
+    #)
+    #install(SCRIPT ${CMAKE_BINARY_DIR}/cmake/GetDependencies.cmake)
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Next-Generation Digital Voice for Two-Way Radio")
     set(CPACK_PACKAGE_VENDOR "CMake")
     set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
@@ -301,6 +313,7 @@ if(UNITTEST)
     include(CTest)
     enable_testing()
 
+    if (NOT WIN32 OR NOT BUILD_SHARED_LIBS)
     add_test(NAME test_codec2_700c_octave_port
              COMMAND sh -c "cd ${CMAKE_CURRENT_BINARY_DIR}/src;
                             ./c2sim ../../raw/cq_ref.raw --phase0 --postfilter --dump cq_ref --lpc 10 --dump_pitch_e cq_ref_pitche.txt; \
@@ -308,6 +321,7 @@ if(UNITTEST)
                             cd ${CMAKE_CURRENT_SOURCE_DIR}/octave;  \
                             octave --no-gui -qf run_tnewamp1.m")
              set_tests_properties(test_codec2_700c_octave_port PROPERTIES PASS_REGULAR_EXPRESSION "fails: 0")
+    endif()
 
     add_test(NAME test_FDMDV_modem_octave_port
              COMMAND sh -c "$<TARGET_FILE:tfdmdv> && octave --no-gui -qf ${CMAKE_CURRENT_SOURCE_DIR}/octave/tfdmdv.m"
@@ -372,13 +386,17 @@ if(UNITTEST)
              PASS_REGULAR_EXPRESSION "1C9A9545")
 
     # tests ldpc_enc/ldpc_noise/ldpc_dec
+    if (NOT WIN32 OR NOT BUILD_SHARED_LIBS)
     add_test(NAME test_ldpc_enc_dec
              COMMAND sh -c "$<TARGET_FILE:ldpc_enc> /dev/zero - --sd --code HRA_112_112 --testframes 200 | $<TARGET_FILE:ldpc_noise> - - 0.5 | $<TARGET_FILE:ldpc_dec> - /dev/null --code HRA_112_112 --sd --testframes"
              )
+    endif()
 
+    if (NOT WIN32 OR NOT BUILD_SHARED_LIBS)
     add_test(NAME test_ldpc_enc_dec_HRAb_396_504
              COMMAND sh -c "$<TARGET_FILE:ldpc_enc> /dev/zero - --sd --code HRAb_396_504 --testframes 200 | $<TARGET_FILE:ldpc_noise> - - -2.0 | $<TARGET_FILE:ldpc_dec> - /dev/null --code HRAb_396_504 --sd --testframes"
              )
+    endif()
 
     # some more LDPC tests, placed in a script for convenience
     add_test(NAME test_ldpc_check
@@ -419,9 +437,11 @@ if(LPCNET)
              )
 endif()
            
+if (NOT "${CMAKE_USE_PTHREADS_INIT}" STREQUAL "")
      add_test(NAME test_fifo
              COMMAND $<TARGET_FILE:tfifo>
              )
+endif()
 
      add_test(NAME test_FreeDV_1600_tx_memory_leak
              COMMAND sh -c " valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./freedv_tx 1600 ../../raw/hts1a.raw /dev/null"

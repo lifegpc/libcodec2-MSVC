@@ -231,31 +231,31 @@ int main(int argc, char *argv[])
     ofdm_ntxtbits = ofdm_config->txtbits;
     ofdm_nuwbits = (ofdm_config->ns - 1) * ofdm_config->bps - ofdm_config->txtbits;
 
-    int tx_bits[ofdm_samplesperframe];
-    COMP tx[ofdm_samplesperframe];         /* one frame of tx samples */
+    int* tx_bits = (int*)malloc(ofdm_samplesperframe * sizeof(int));
+    COMP* tx = (COMP*)malloc(ofdm_samplesperframe * sizeof(COMP));         /* one frame of tx samples */
 
-    int rx_bits[ofdm_bitsperframe];    /* one frame of rx bits    */
+    int* rx_bits = (int*)malloc(ofdm_bitsperframe * sizeof(int));    /* one frame of rx bits    */
     printf("Nc = %d ofdm_bitsperframe: %d\n", ofdm_nc, ofdm_bitsperframe);
     
     /* log arrays */
 
-    int tx_bits_log[ofdm_bitsperframe*NFRAMES];
-    COMP tx_log[ofdm_samplesperframe*NFRAMES];
-    COMP rx_log[ofdm_samplesperframe*NFRAMES];
-    COMP rxbuf_in_log[ofdm_max_samplesperframe*NFRAMES];
-    COMP rxbuf_log[ofdm_rxbuf*NFRAMES];
-    COMP rx_sym_log[(ofdm_ns + 3)*NFRAMES][ofdm_nc + 2];
-    float phase_est_pilot_log[ofdm_rowsperframe*NFRAMES][ofdm_nc];
-    COMP rx_np_log[ofdm_rowsperframe*ofdm_nc*NFRAMES];
-    float rx_amp_log[ofdm_rowsperframe*ofdm_nc*NFRAMES];
+    int* tx_bits_log = (int*)malloc(ofdm_bitsperframe * NFRAMES * sizeof(int));
+    COMP* tx_log = (COMP*)malloc(ofdm_samplesperframe * NFRAMES * sizeof(COMP));
+    COMP* rx_log = (COMP*)malloc(ofdm_samplesperframe * NFRAMES * sizeof(COMP));
+    COMP* rxbuf_in_log = (COMP*)malloc(ofdm_max_samplesperframe * NFRAMES * sizeof(COMP));
+    COMP* rxbuf_log = (COMP*)malloc(ofdm_rxbuf * NFRAMES * sizeof(COMP));
+    COMP* rx_sym_log = (COMP*)malloc(((ofdm_ns + 3) * NFRAMES) * (ofdm_nc + 2) * sizeof(COMP));
+    float* phase_est_pilot_log = (float*)malloc((ofdm_rowsperframe * NFRAMES) * ofdm_nc * sizeof(float));
+    COMP* rx_np_log = (COMP*)malloc(ofdm_rowsperframe * ofdm_nc * NFRAMES * sizeof(COMP));
+    float* rx_amp_log = (float*)malloc(ofdm_rowsperframe * ofdm_nc * NFRAMES * sizeof(float));
     float foff_hz_log[NFRAMES];
-    int rx_bits_log[ofdm_bitsperframe*NFRAMES];
+    int* rx_bits_log = (int*)malloc(ofdm_bitsperframe * NFRAMES * sizeof(int));
     int timing_est_log[NFRAMES];
     int timing_valid_log[NFRAMES];
     float timing_mx_log[NFRAMES];
     float coarse_foff_est_hz_log[NFRAMES];
     int sample_point_log[NFRAMES];
-    float symbol_likelihood_log[ (CODED_BITSPERFRAME/ofdm_bps) * (1<<ofdm_bps) * NFRAMES];
+    float* symbol_likelihood_log = (float*)malloc((CODED_BITSPERFRAME / ofdm_bps) * (1 << ofdm_bps) * NFRAMES * sizeof(float));
     float bit_likelihood_log[CODED_BITSPERFRAME * NFRAMES];        
     int detected_data_log[CODED_BITSPERFRAME * NFRAMES];
     float sig_var_log[NFRAMES], noise_var_log[NFRAMES];        
@@ -315,20 +315,25 @@ int main(int argc, char *argv[])
             assert(i == ofdm_bitsperframe);
         } else {
             int Npayloadbits = ofdm_bitsperframe - (ofdm_nuwbits + ofdm_ntxtbits);
-            uint16_t r[Npayloadbits];
-            uint8_t payload_bits[Npayloadbits];
+            uint16_t* r = (uint16_t*)malloc(Npayloadbits * sizeof(uint16_t));
+            uint8_t* payload_bits = (uint8_t*)malloc(Npayloadbits * sizeof(uint8_t));
 
             ofdm_rand(r, Npayloadbits);
             for (i = 0; i < Npayloadbits; i++)
                 payload_bits[i] = r[i] > 16384;
-            uint8_t txt_bits[ofdm_ntxtbits];
+            uint8_t* txt_bits = (uint8_t*)malloc(ofdm_ntxtbits * sizeof(uint8_t));
             for (i = 0; i < ofdm_ntxtbits; i++)
                 txt_bits[i] = 0;
 
-            uint8_t tx_bits_char[ofdm_bitsperframe];
+            uint8_t* tx_bits_char = (uint8_t*)malloc(ofdm_bitsperframe * sizeof(uint8_t));
             ofdm_assemble_modem_frame(ofdm, tx_bits_char, payload_bits, txt_bits);
             for(i=0; i<ofdm_bitsperframe; i++)
                 tx_bits[i] = tx_bits_char[i];
+
+            free(r);
+            free(payload_bits);
+            free(txt_bits);
+            free(tx_bits_char);
         }
         
         ofdm_mod(ofdm, (COMP*)tx, tx_bits);
@@ -360,12 +365,16 @@ int main(int argc, char *argv[])
     int nin = ofdm_samplesperframe + 2*(ofdm_m+ofdm_ncp);
 
     int  lnew;
-    COMP rxbuf_in[ofdm_max_samplesperframe];
+    COMP* rxbuf_in = (COMP*)malloc(ofdm_max_samplesperframe * sizeof(COMP));
 
 #define FRONT_LOAD
 #ifdef FRONT_LOAD
     for (i=0; i<nin; i++,prx++) {
+#ifndef _MSC_VER
          ofdm->rxbuf[ofdm_rxbuf-nin+i] = rx_log[prx].real + rx_log[prx].imag * I;
+#else
+        ofdm->rxbuf[ofdm_rxbuf - nin + i] = _FCbuild(rx_log[prx].real, rx_log[prx].imag);
+#endif
     }
 #endif
     
@@ -444,7 +453,7 @@ int main(int argc, char *argv[])
         printf("f: %d Nerr: %d\n", f, Nerrs);
 #endif
         
-        float symbol_likelihood[ (CODED_BITSPERFRAME/ofdm_bps) * (1<<ofdm_bps) ];
+        float* symbol_likelihood = (float*)malloc((CODED_BITSPERFRAME / ofdm_bps) * (1 << ofdm_bps) * sizeof(float));
         float bit_likelihood[CODED_BITSPERFRAME];
         uint8_t out_char[CODED_BITSPERFRAME];
 
@@ -457,7 +466,7 @@ int main(int argc, char *argv[])
 
             assert((ofdm_nuwbits+ofdm_ntxtbits+CODED_BITSPERFRAME) == ofdm_bitsperframe);
 
-            COMP ldpc_codeword_symbols[(CODED_BITSPERFRAME/ofdm_bps)];
+            COMP* ldpc_codeword_symbols = (COMP*)malloc((CODED_BITSPERFRAME / ofdm_bps) * sizeof(COMP));
 
             for(i=0, j=(ofdm_nuwbits+ofdm_ntxtbits)/ofdm_bps; i<(CODED_BITSPERFRAME/ofdm_bps); i++,j++) {
                 ldpc_codeword_symbols[i].real = crealf(ofdm->rx_np[j]);
@@ -488,6 +497,8 @@ int main(int argc, char *argv[])
               fprintf(stderr, "%d ", out_char[i]);
               }
             */
+
+            free(ldpc_codeword_symbols);
         }
         
         /* rx vector logging -----------------------------------*/
@@ -503,8 +514,8 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < (ofdm_ns + 3); i++) {
             for (j = 0; j < (ofdm_nc + 2); j++) {
-                rx_sym_log[(ofdm_ns + 3)*f+i][j].real = crealf(ofdm->rx_sym[i][j]);
-                rx_sym_log[(ofdm_ns + 3)*f+i][j].imag = cimagf(ofdm->rx_sym[i][j]);
+                rx_sym_log[((ofdm_ns + 3) * f + i) * (ofdm_nc + 2) + j].real = crealf(ofdm->rx_sym[i][j]);
+                rx_sym_log[((ofdm_ns + 3) * f + i) * (ofdm_nc + 2) + j].imag = cimagf(ofdm->rx_sym[i][j]);
             }
         }
 
@@ -519,7 +530,7 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < ofdm_rowsperframe; i++) {
             for (j = 0; j < ofdm_nc; j++) {
-                phase_est_pilot_log[ofdm_rowsperframe*f+i][j] = ofdm->aphase_est_pilot_log[ofdm_nc*i+j];
+                phase_est_pilot_log[(ofdm_rowsperframe * f + i) * ofdm_nc + j] = ofdm->aphase_est_pilot_log[ofdm_nc * i + j];
                 rx_amp_log[ofdm_rowsperframe*ofdm_nc*f+ofdm_nc*i+j] = ofdm->rx_amp[ofdm_nc*i+j];
             }
         }
@@ -545,6 +556,8 @@ int main(int argc, char *argv[])
                 detected_data_log[CODED_BITSPERFRAME*f + i] = out_char[i];
             }
         }
+
+        free(symbol_likelihood);
     }
 
     /*---------------------------------------------------------*\
@@ -584,6 +597,22 @@ int main(int argc, char *argv[])
 #endif
 
     ofdm_destroy(ofdm);
+
+    free(tx_bits);
+    free(tx);
+    free(rx_bits);
+    free(tx_bits_log);
+    free(tx_log);
+    free(rx_log);
+    free(rxbuf_in_log);
+    free(rxbuf_log);
+    free(rx_sym_log);
+    free(phase_est_pilot_log);
+    free(rx_np_log);
+    free(rx_amp_log);
+    free(rx_bits_log);
+    free(symbol_likelihood_log);
+    free(rxbuf_in);
 
     return 0;
 }

@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     
     while (fread(ibits, sizeof(char), data_bits_per_frame, fin) == data_bits_per_frame) {
         if (testframes) {
-            uint16_t r[data_bits_per_frame];
+            uint16_t* r = (uint16_t*)malloc(data_bits_per_frame * sizeof(uint16_t));
             ofdm_rand(r, data_bits_per_frame);
 
             for(i=0; i<data_bits_per_frame-unused_data_bits; i++) {
@@ -156,6 +156,7 @@ int main(int argc, char *argv[])
                 ibits[i] = 1;
             }
            
+            free(r);
         }
         
         encode(&ldpc, ibits, pbits);  

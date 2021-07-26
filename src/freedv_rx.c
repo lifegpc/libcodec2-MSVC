@@ -212,8 +212,8 @@ int main(int argc, char *argv[]) {
     freedv_set_squelch_en(freedv, 0);
     freedv_set_dpsk(freedv, use_dpsk);
 
-    short speech_out[freedv_get_n_speech_samples(freedv)];
-    short demod_in[freedv_get_n_max_modem_samples(freedv)];
+    short* speech_out = (short*)malloc(freedv_get_n_speech_samples(freedv) * sizeof(short));
+    short* demod_in = (short*)malloc(freedv_get_n_max_modem_samples(freedv) * sizeof(short));
 
     ftxt = fopen("freedv_rx_log.txt","wt");
     assert(ftxt != NULL);
@@ -237,12 +237,13 @@ int main(int argc, char *argv[]) {
                 /* exercise the complex version of the API (useful
                    for testing 700D which has a different code path for
                    short samples) */
-                COMP demod_in_complex[nin];
+                COMP* demod_in_complex = (COMP*)malloc(nin * sizeof(COMP));
                 for(int i=0; i<nin; i++) {
                     demod_in_complex[i].real = (float)demod_in[i];
                     demod_in_complex[i].imag = 0.0;
                 }
                 nout = freedv_comprx(freedv, speech_out, demod_in_complex);
+                free(demod_in_complex);
            }
             else {
                 // most common interface - real shorts in, real shorts out
@@ -254,7 +255,7 @@ int main(int argc, char *argv[]) {
             int bytes_per_codec_frame = (bits_per_codec_frame + 7) / 8;
             int codec_frames = freedv_get_n_codec_bits(freedv) / bits_per_codec_frame;
             int samples_per_frame = codec2_samples_per_frame(c2);
-            unsigned char encoded[bytes_per_codec_frame * codec_frames];
+            unsigned char* encoded = (unsigned char*)malloc(bytes_per_codec_frame * codec_frames * sizeof(unsigned char));
 
             /* Use the freedv_api to demodulate only */
             nout = freedv_codecrx(freedv, encoded, demod_in);
@@ -272,6 +273,7 @@ int main(int argc, char *argv[]) {
                     nout += samples_per_frame;
                 }
             }
+            free(encoded);
         }
 
         nin = freedv_nin(freedv);
@@ -315,6 +317,9 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Coded BER: %5.4f Tbits: %5d Terrs: %5d\n",
                     (double)coded_ber, Tbits_coded, Terrs_coded);
 
+            free(speech_out);
+            free(demod_in);
+
             /* set return code for Ctest */
             if ((uncoded_ber < 0.1) && (coded_ber < 0.01))
                 return 0;
@@ -328,6 +333,9 @@ int main(int argc, char *argv[]) {
     fclose(fin);
     fclose(fout);
     
+    free(speech_out);
+    free(demod_in);
+
     return 0;
 }
 

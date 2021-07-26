@@ -483,7 +483,7 @@ void interleave(unsigned char *inout, int nbytes, int dir)
     uint16_t nbits = (uint16_t)nbytes*8;
     uint32_t i, j, n, ibit, ibyte, ishift, jbyte, jshift;
     uint32_t b;
-    unsigned char out[nbytes];
+    unsigned char* out = (unsigned char*)malloc(nbytes * sizeof(unsigned char));
 
     memset(out, 0, nbytes);
            
@@ -537,6 +537,8 @@ void interleave(unsigned char *inout, int nbytes, int dir)
     for (i=0; i<nbytes; i++)
         printf("%02d 0x%02x\n", i, inout[i]);
     #endif
+
+    free(out);
 }
 #endif
 
@@ -771,7 +773,11 @@ struct TBinaryPacket
     int8_t      Temp;        // Twos Complement Temp value.
     uint8_t     BattVoltage; // 0 = 0.5v, 255 = 2.0V, linear steps in-between.
     uint16_t    Checksum;    // CRC16-CCITT Checksum.
-}  __attribute__ ((packed));
+#ifndef _MSC_VER
+}  __attribute__((packed));
+#else
+};
+#endif
 
 #ifdef GEN_TX_BITS
 /* generate a file of tx_bits to modulate using fsk_horus.m for modem simulations */

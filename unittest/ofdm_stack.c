@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <complex.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <assert.h>
+#include "getopt.h"
 
 #include "comp.h"
 #include "ofdm_internal.h"
@@ -67,9 +70,9 @@ int main(int argc, char *argv[]) {
     ofdm_rx_offset = (ofdm_nuwbits + ofdm_ntxtbits);
     ofdm_data_bitsperframe = (ofdm_bitsperframe - ofdm_rx_offset);
 
-    int tx_bits[ofdm_data_bitsperframe];
-    int rx_bits[ofdm_data_bitsperframe];
-    COMP tx_rx[ofdm_samplesperframe];
+    int* tx_bits = (int*)malloc(ofdm_data_bitsperframe * sizeof(int));
+    int* rx_bits = (int*)malloc(ofdm_data_bitsperframe * sizeof(int));
+    COMP* tx_rx = (COMP*)malloc(ofdm_samplesperframe * sizeof(COMP));
 
     while ((opt = getopt(argc, argv, "df:p")) != -1) {
         switch (opt) {
@@ -139,12 +142,16 @@ int main(int argc, char *argv[]) {
 
     ofdm_destroy(ofdm);
 
+    free(tx_bits);
+    free(rx_bits);
+    free(tx_rx);
+
 }   // end main()
 
 
 //////////////////////////////////
 void run_modem(int tx_bits[], int rx_bits[], COMP tx_rx[]) {
-    int mod_bits[ofdm_samplesperframe];
+    int* mod_bits = (int*)malloc(ofdm_samplesperframe * sizeof(int));
     int i, j;
 
     ///////////
@@ -178,14 +185,22 @@ void run_modem(int tx_bits[], int rx_bits[], COMP tx_rx[]) {
     int  nin =  ofdm_samplesperframe + 2 * (ofdm_m + ofdm_ncp);
 
     int  lnew;
-    COMP rxbuf_in[ofdm_max_samplesperframe];
+    COMP* rxbuf_in = (COMP*)malloc(ofdm_max_samplesperframe * sizeof(COMP));
 
     for (i=0; i<ofdm_samplesperframe ; i++,prx++) {
+#ifndef _MSC_VER
         ofdm->rxbuf[ofdm_rxbuf-nin+i] = tx_rx[prx].real + tx_rx[prx].imag * I;
+#else
+        ofdm->rxbuf[ofdm_rxbuf - nin + i] = _FCbuild(tx_rx[prx].real, tx_rx[prx].imag);
+#endif
     }
 
     for (i=ofdm_samplesperframe ; i<nin; i++) {
+#ifndef _MSC_VER
         ofdm->rxbuf[ofdm_rxbuf-nin+i] = 0.0 + 0.0 * I;
+#else
+        ofdm->rxbuf[ofdm_rxbuf - nin + i] = _FCbuild(0, 0);
+#endif
     }
     
     /* disable estimators for initial testing */
@@ -220,6 +235,8 @@ void run_modem(int tx_bits[], int rx_bits[], COMP tx_rx[]) {
 
     ofdm_demod(ofdm, rx_bits, rxbuf_in);
     
+    free(mod_bits);
+    free(rxbuf_in);
 
 }   // end run_modem()
 

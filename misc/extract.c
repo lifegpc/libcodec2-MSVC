@@ -70,24 +70,28 @@ int main(int argc, char *argv[]) {
     printf("extracting from %d to %d inclusive (stride %d) ... gain = %f pred = %f frame_delay = %d\n",
            st, en, stride, gain, pred, frame_delay);
    
-    float features[stride], features_prev[frame_delay][stride], delta[stride];
+    float* features = (float*)malloc(stride * sizeof(float)), * features_prev = (float*)malloc(frame_delay * stride * sizeof(float)), * delta = (float*)malloc(stride * sizeof(float));
     int i,f;
     
-    for (f=0; f<frame_delay; f++)
-        for(i=0; i<stride; i++)
-            features_prev[f][i] = 0.0;
+    for (f = 0; f < frame_delay; f++)
+        for (i = 0; i < stride; i++)
+            features_prev[f * stride + i] = 0.0;
 
     while((fread(features, sizeof(float), stride, fin) == stride)) {
         for(i=st; i<=en; i++) {
-            delta[i] = gain*(features[i] - pred*features_prev[frame_delay-1][i]);
+            delta[i] = gain * (features[i] - pred * features_prev[(frame_delay - 1) * stride + i]);
         }
         fwrite(&delta[st], sizeof(float), en-st+1, fout);
-        for (f=frame_delay-1; f>0; f--)
-            for(i=0; i<stride; i++)
-                features_prev[f][i] = features_prev[f-1][i];
+        for (f = frame_delay - 1; f > 0; f--)
+            for (i = 0; i < stride; i++)
+                features_prev[f * stride + i] = features_prev[(f - 1) * stride + i];
         for(i=0; i<stride; i++)
-            features_prev[0][i] = features[i];        
+            features_prev[i] = features[i];        
     }
+
+    free(features);
+    free(features_prev);
+    free(delta);
 
     fclose(fin); fclose(fout);
     

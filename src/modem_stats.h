@@ -32,6 +32,7 @@
 #ifndef __MODEM_STATS__
 #define __MODEM_STATS__
 
+#include "dllexport.h"
 #include "comp.h"
 #include "kiss_fft.h"
 
@@ -77,9 +78,9 @@ struct MODEM_STATS {
 #endif
 };
 
-void modem_stats_open(struct MODEM_STATS *f);
-void modem_stats_close(struct MODEM_STATS *f);
-void modem_stats_get_rx_spectrum(struct MODEM_STATS *f, float mag_spec_dB[], COMP rx_fdm[], int nin);
+CODEC2_PUBLIC void modem_stats_open(struct MODEM_STATS *f);
+CODEC2_PUBLIC void modem_stats_close(struct MODEM_STATS *f);
+CODEC2_PUBLIC void modem_stats_get_rx_spectrum(struct MODEM_STATS *f, float mag_spec_dB[], COMP rx_fdm[], int nin);
 
 #endif
 

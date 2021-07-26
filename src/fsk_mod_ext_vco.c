@@ -83,8 +83,8 @@ int main(int argc,char *argv[]){
     assert(legacy_mode || rpitx_mode);
     fprintf(stderr, "legacy_mode: %d rpitx_mode: %d\n", legacy_mode, rpitx_mode);
     
-    uint8_t tx_bits[log2m];
-    int16_t rawbuf[os];
+    uint8_t* tx_bits = (uint8_t*)malloc(log2m * sizeof(uint8_t));
+    int16_t* rawbuf = (uint16_t*)malloc(os * sizeof(uint16_t));
 
     /* Modulate m bits to levels to drive external VCO */
 
@@ -137,6 +137,9 @@ int main(int argc,char *argv[]){
     
     fclose(fin);
     fclose(fout);
+
+    free(tx_bits);
+    free(rawbuf);
 
     exit(0);
 }

@@ -34,6 +34,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 #include "defines.h"
@@ -126,7 +129,7 @@ void n2_rate_K_mbest_encode(int *indexes, float *x, float *xq, int ndim)
   int i, n1;
   const float *codebook1 = newamp2vq_cb[0].cb;
   struct MBEST *mbest_stage1;
-  float w[ndim];
+  float* w = (float*)malloc(ndim * sizeof(float));
   int   index[1];
 
   /* codebook is compiled for a fixed K */
@@ -153,6 +156,7 @@ void n2_rate_K_mbest_encode(int *indexes, float *x, float *xq, int ndim)
   //indexes[1]: legacy from newamp1
   indexes[0] = n1; indexes[1] = n1;
 
+  free(w);
 }
 
 
@@ -170,7 +174,7 @@ void n2_rate_K_mbest_encode(int *indexes, float *x, float *xq, int ndim)
 
 void n2_resample_rate_L(C2CONST *c2const, MODEL *model, float rate_K_vec[], float rate_K_sample_freqs_kHz[], int K,int plosive_flag)
 {
-   float rate_K_vec_term[K+2], rate_K_sample_freqs_kHz_term[K+2];
+    float* rate_K_vec_term = (float*)malloc((K + 2) * sizeof(float)), * rate_K_sample_freqs_kHz_term = (float*)malloc((K + 2) * sizeof(float));
    float AmdB[MAX_AMP+1], rate_L_sample_freqs_kHz[MAX_AMP+1];
    int m,k;
 
@@ -200,6 +204,8 @@ void n2_resample_rate_L(C2CONST *c2const, MODEL *model, float rate_K_vec[], floa
 		}
        // printf("m: %d f: %f AdB: %f A: %f\n", m, rate_L_sample_freqs_kHz[m], AmdB[m], model->A[m]);
    }
+   free(rate_K_vec_term);
+   free(rate_K_sample_freqs_kHz_term);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -224,7 +230,7 @@ void n2_post_filter_newamp2(float vec[], float sample_freq_kHz[], int K, float p
       and normalise.  Plenty of room for experiment here as well.
     */
     
-    float pre[K];
+    float* pre = (float*)malloc(K * sizeof(float));
     float e_before = 0.0;
     float e_after = 0.0;
     for(k=0; k<K; k++) {
@@ -242,6 +248,8 @@ void n2_post_filter_newamp2(float vec[], float sample_freq_kHz[], int K, float p
         vec[k] -= gaindB;
         vec[k] -= pre[k];
     }
+
+    free(pre);
 }
 
 
@@ -477,7 +485,7 @@ void newamp2_indexes_to_model(C2CONST *c2const,
                               float pf_gain,
                               int flag16k)
 {
-    float rate_K_vec_[K], rate_K_vec_no_mean_[K], mean_, Wo_right;
+    float* rate_K_vec_ = (float*)malloc(K * sizeof(float)), * rate_K_vec_no_mean_ = (float*)malloc(K * sizeof(float)), mean_, Wo_right;
     int   voicing_right, k;
     int   M = 4;
 
@@ -530,8 +538,8 @@ void newamp2_indexes_to_model(C2CONST *c2const,
 
     /* interpolate 25Hz v and Wo back to 100Hz */
 
-    float aWo_[M];
-    int avoicing_[M], aL_[M], i;
+    float* aWo_ = (float*)malloc(M * sizeof(float));
+    int* avoicing_ = (int*)malloc(M * sizeof(int)), * aL_ = (int*)malloc(M * sizeof(int)), i;
 
     interp_Wo_v(aWo_, aL_, avoicing_, *Wo_left, Wo_right, *voicing_left, voicing_right);
 
@@ -566,5 +574,10 @@ void newamp2_indexes_to_model(C2CONST *c2const,
     *Wo_left = Wo_right;
     *voicing_left = voicing_right;
 
+    free(rate_K_vec_);
+    free(rate_K_vec_no_mean_);
+    free(aWo_);
+    free(avoicing_);
+    free(aL_);
 }
 

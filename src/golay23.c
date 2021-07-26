@@ -33,6 +33,7 @@
 */
 
 #include <assert.h>
+#include "golay23.h"
 
 #ifdef GOLAY23_MAKETABLES
 #define RUN_TIME_TABLES

@@ -33,6 +33,10 @@
 #include "fmfsk.h"
 #include "codec2_fdmdv.h"
 
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
+
 int main(int argc,char *argv[]){
     struct FMFSK *fmfsk;
     int Fs,Rb;

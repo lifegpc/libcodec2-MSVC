@@ -74,16 +74,17 @@ int main(int argc, char *argv[]) {
     }
 
     if (format == SIGNED_16BIT) {
-        short buf[dec*channels];
+        short* buf = (short*)malloc(dec * channels * sizeof(short));
         while(fread(buf, sizeof(short)*channels, dec, fin) == dec) {
             if (freq_shift)            
                 freq_shift_complex_buf(buf, dec*channels, lo_i, lo_q);
             fwrite(buf, sizeof(short), channels, fout);
         }
+        free(buf);
     }
     else {
-        uint8_t inbuf[dec*channels];
-        short   outbuf[dec*channels];
+        uint8_t* inbuf = (uint8_t*)malloc(dec * channels);
+        short* outbuf = (short*)malloc(dec * channels * sizeof(short));
         short   sam, i;
         
         while(fread(inbuf, sizeof(uint8_t)*channels, dec, fin) == dec) {
@@ -103,6 +104,8 @@ int main(int argc, char *argv[]) {
             fwrite(outbuf, sizeof(short), channels, fout);
         }
 
+        free(inbuf);
+        free(outbuf);
     }
 
     fclose(fout);

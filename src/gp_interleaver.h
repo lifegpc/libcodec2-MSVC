@@ -32,10 +32,11 @@
 #define __GP_INTERLEAVER__
 
 #include "comp.h"
+#include "dllexport.h"
 
-void gp_interleave_comp(COMP interleaved_frame[], COMP frame[], int Nbits);
-void gp_deinterleave_comp(COMP frame[], COMP interleaved_frame[], int Nbits);
-void gp_interleave_float(float frame[], float interleaved_frame[], int Nbits);
-void gp_deinterleave_float(float interleaved_frame[], float frame[], int Nbits);
+CODEC2_PUBLIC void gp_interleave_comp(COMP interleaved_frame[], COMP frame[], int Nbits);
+CODEC2_PUBLIC void gp_deinterleave_comp(COMP frame[], COMP interleaved_frame[], int Nbits);
+CODEC2_PUBLIC void gp_interleave_float(float frame[], float interleaved_frame[], int Nbits);
+CODEC2_PUBLIC void gp_deinterleave_float(float interleaved_frame[], float frame[], int Nbits);
 
 #endif

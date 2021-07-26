@@ -32,6 +32,10 @@
 #include <string.h>
 #include "fsk.h"
 
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
+
 #define TEST_FRAME_SIZE 100  /* must match fsk_get_test_bits.c */
 
 int main(int argc,char *argv[]){

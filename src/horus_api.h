@@ -29,6 +29,7 @@
 #ifdef __cplusplus
   extern "C" {
 #endif
+#include "dllexport.h"
 
 #ifndef __HORUS_API__
 
@@ -41,37 +42,37 @@
 struct horus;
 struct MODEM_STATS;
 
-struct horus *horus_open  (int mode);
-void          horus_close (struct horus *hstates);
+CODEC2_PUBLIC struct horus *horus_open  (int mode);
+CODEC2_PUBLIC void          horus_close (struct horus *hstates);
 
 /* call before horus_rx() to determine how many shorts to pass in */
 
-uint32_t      horus_nin   (struct horus *hstates);
+CODEC2_PUBLIC uint32_t      horus_nin   (struct horus *hstates);
 
 /* returns 1 if ascii_out[] is valid */
       
-int           horus_rx    (struct horus *hstates, char ascii_out[], short demod_in[]);
+CODEC2_PUBLIC int           horus_rx    (struct horus *hstates, char ascii_out[], short demod_in[]);
 
 /* set verbose level */
       
-void horus_set_verbose(struct horus *hstates, int verbose);
+CODEC2_PUBLIC void horus_set_verbose(struct horus *hstates, int verbose);
       
 /* functions to get information from API  */
       
-int           horus_get_version              (void);
-int           horus_get_mode                 (struct horus *hstates);
-int           horus_get_Fs                   (struct horus *hstates);      
-int           horus_get_mFSK                 (struct horus *hstates);      
-void          horus_get_modem_stats          (struct horus *hstates, int *sync, float *snr_est);
-void          horus_get_modem_extended_stats (struct horus *hstates, struct MODEM_STATS *stats);
-int           horus_crc_ok                   (struct horus *hstates);
-int           horus_get_total_payload_bits   (struct horus *hstates);
-void          horus_set_total_payload_bits   (struct horus *hstates, int val);
+CODEC2_PUBLIC int           horus_get_version              (void);
+CODEC2_PUBLIC int           horus_get_mode                 (struct horus *hstates);
+CODEC2_PUBLIC int           horus_get_Fs                   (struct horus *hstates);
+CODEC2_PUBLIC int           horus_get_mFSK                 (struct horus *hstates);
+CODEC2_PUBLIC void          horus_get_modem_stats          (struct horus *hstates, int *sync, float *snr_est);
+CODEC2_PUBLIC void          horus_get_modem_extended_stats (struct horus *hstates, struct MODEM_STATS *stats);
+CODEC2_PUBLIC int           horus_crc_ok                   (struct horus *hstates);
+CODEC2_PUBLIC int           horus_get_total_payload_bits   (struct horus *hstates);
+CODEC2_PUBLIC void          horus_set_total_payload_bits   (struct horus *hstates, int val);
 
 /* how much storage you need for demod_in[] and  ascii_out[] */
       
-int           horus_get_max_demod_in         (struct horus *hstates);
-int           horus_get_max_ascii_out_len    (struct horus *hstates);
+CODEC2_PUBLIC int           horus_get_max_demod_in         (struct horus *hstates);
+CODEC2_PUBLIC int           horus_get_max_ascii_out_len    (struct horus *hstates);
 
 #endif
 

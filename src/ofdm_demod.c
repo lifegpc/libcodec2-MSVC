@@ -335,9 +335,9 @@ int main(int argc, char *argv[]) {
     ofdm_nuwbits = (ofdm_config->ns - 1) * ofdm_config->bps - ofdm_config->txtbits;
     ofdm_ntxtbits = ofdm_config->txtbits;
 
-    float phase_est_pilot_log[ofdm_rowsperframe * NFRAMES][ofdm_config->nc];
-    COMP rx_np_log[ofdm_rowsperframe * ofdm_config->nc * NFRAMES];
-    float rx_amp_log[ofdm_rowsperframe * ofdm_config->nc * NFRAMES];
+    float* phase_est_pilot_log = (float*)malloc((ofdm_rowsperframe * NFRAMES) * (ofdm_config->nc) * sizeof(float));
+    COMP* rx_np_log = (COMP*)malloc(ofdm_rowsperframe * ofdm_config->nc * NFRAMES * sizeof(COMP));
+    float* rx_amp_log = (float*)malloc(ofdm_rowsperframe * ofdm_config->nc * NFRAMES * sizeof(float));
     float foff_hz_log[NFRAMES], snr_est_log[NFRAMES];
     int timing_est_log[NFRAMES];
 
@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
 
     for (i = 0; i < (ofdm_rowsperframe * NFRAMES); i++) {
         for (j = 0; j < ofdm_config->nc; j++) {
-            phase_est_pilot_log[i][j] = 0.0f;
+            phase_est_pilot_log[i * ofdm_config->nc + j] = 0.0f;
         }
     }
 
@@ -409,10 +409,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    int Nerrs_raw[interleave_frames];
-    int Nerrs_coded[interleave_frames];
-    int iter[interleave_frames];
-    int parityCheckCount[interleave_frames];
+    int* Nerrs_raw = (int*)malloc(interleave_frames * sizeof(int));
+    int* Nerrs_coded = (int*)malloc(interleave_frames * sizeof(int));
+    int* iter = (int*)malloc(interleave_frames * sizeof(int));
+    int* parityCheckCount = (int*)malloc(interleave_frames * sizeof(int));
 
     for (i = 0; i < interleave_frames; i++) {
         Nerrs_raw[i] = 0;
@@ -429,11 +429,11 @@ int main(int argc, char *argv[]) {
 
     if (ldpc_en) assert(Npayloadsymsperframe >= coded_syms_per_frame);
 
-    short rx_scaled[Nmaxsamperframe];
-    int rx_bits[Nbitsperframe];
-    uint8_t rx_bits_char[Nbitsperframe];
-    uint8_t rx_uw[ofdm_nuwbits];
-    short txt_bits[ofdm_ntxtbits];
+    short* rx_scaled = (short*)malloc(Nmaxsamperframe * sizeof(short));
+    int* rx_bits = (int*)malloc(Nbitsperframe * sizeof(int));
+    uint8_t* rx_bits_char = (uint8_t*)malloc(Nbitsperframe * sizeof(uint8_t));
+    uint8_t* rx_uw = (uint8_t*)malloc(ofdm_nuwbits * sizeof(uint8_t));
+    short* txt_bits = (short*)malloc(ofdm_ntxtbits * sizeof(short));
     int Nerrs, Terrs, Tbits, Terrs2, Tbits2, Terrs_coded, Tbits_coded, frame_count;
 
     Nerrs = Terrs = Tbits = Terrs2 = Tbits2 = Terrs_coded = Tbits_coded = frame_count = 0;
@@ -444,11 +444,11 @@ int main(int argc, char *argv[]) {
     if (verbose == 2)
         fprintf(stderr, "Warning EsNo: %f hard coded\n", EsNo);
 
-    COMP payload_syms[Npayloadsymsperframe];
-    COMP codeword_symbols[interleave_frames * Npayloadsymsperframe];
+    COMP* payload_syms = (COMP*)malloc(Npayloadsymsperframe * sizeof(COMP));
+    COMP* codeword_symbols = (COMP*)malloc(interleave_frames * Npayloadsymsperframe * sizeof(COMP));
 
-    float payload_amps[Npayloadsymsperframe];
-    float codeword_amps[interleave_frames * Npayloadsymsperframe];
+    float* payload_amps = (float*)malloc(Npayloadsymsperframe * sizeof(float));
+    float* codeword_amps = (float*)malloc(interleave_frames * Npayloadsymsperframe * sizeof(float));
 
     for (i = 0; i < (interleave_frames * Npayloadsymsperframe); i++) {
         codeword_symbols[i].real = 0.0f;
@@ -457,14 +457,14 @@ int main(int argc, char *argv[]) {
     }
 
     /* More logging */
-    COMP payload_syms_log[NFRAMES][Npayloadsymsperframe];
-    float payload_amps_log[NFRAMES][Npayloadsymsperframe];
+    COMP* payload_syms_log = (COMP*)malloc(NFRAMES * Npayloadsymsperframe * sizeof(COMP));
+    float* payload_amps_log = (float*)malloc(NFRAMES * Npayloadsymsperframe * sizeof(float));
 
     for (i = 0; i < NFRAMES; i++) {
         for (j = 0; j < Npayloadsymsperframe; j++) {
-            payload_syms_log[i][j].real = 0.0f;
-            payload_syms_log[i][j].imag = 0.0f;
-            payload_amps_log[i][j] = 0.0f;
+            payload_syms_log[i * Npayloadsymsperframe + j].real = 0.0f;
+            payload_syms_log[i * Npayloadsymsperframe + j].imag = 0.0f;
+            payload_amps_log[i * Npayloadsymsperframe + j] = 0.0f;
         }
     }
 
@@ -526,16 +526,16 @@ int main(int argc, char *argv[]) {
 
                 /* run de-interleaver */
 
-                COMP codeword_symbols_de[interleave_frames * coded_syms_per_frame];
-                float codeword_amps_de[interleave_frames * coded_syms_per_frame];
+                COMP* codeword_symbols_de = (COMP*)malloc(interleave_frames * coded_syms_per_frame * sizeof(COMP));
+                float* codeword_amps_de = (float*)malloc(interleave_frames * coded_syms_per_frame * sizeof(float));
 
                 gp_deinterleave_comp(codeword_symbols_de, codeword_symbols, interleave_frames * coded_syms_per_frame);
                 gp_deinterleave_float(codeword_amps_de, codeword_amps, interleave_frames * coded_syms_per_frame);
 
-                float llr[coded_bits_per_frame];
+                float* llr = (float*)malloc(coded_bits_per_frame * sizeof(float));
 
                 if (ldpc_en) {
-                    uint8_t out_char[coded_bits_per_frame];
+                    uint8_t* out_char = (uint8_t*)malloc(coded_bits_per_frame * sizeof(uint8_t));
 
                     interleaver_sync_state_machine(ofdm, &ldpc, ofdm_config, codeword_symbols_de, codeword_amps_de, EsNo,
                             interleave_frames, iter, parityCheckCount, Nerrs_coded);
@@ -557,7 +557,7 @@ int main(int argc, char *argv[]) {
                                iter[j] = run_ldpc_decoder(&ldpc, out_char, llr, &parityCheckCount[j]);
                             } else {
                                 /* some unused data bits, set these to known values to strengthen code */
-                                float llr_full_codeword[ldpc.ldpc_coded_bits_per_frame];
+                                float* llr_full_codeword = (float*)malloc(ldpc.ldpc_coded_bits_per_frame * sizeof(float));
                                 int unused_data_bits = ldpc.ldpc_data_bits_per_frame - ldpc.data_bits_per_frame;
                                 
                                 // received data bits
@@ -570,27 +570,34 @@ int main(int argc, char *argv[]) {
                                 for (i = ldpc.ldpc_data_bits_per_frame; i < ldpc.ldpc_coded_bits_per_frame; i++)
                                     llr_full_codeword[i] = llr[i-unused_data_bits]; 
                                 iter[j] = run_ldpc_decoder(&ldpc, out_char, llr_full_codeword, &parityCheckCount[j]);
+                                free(llr_full_codeword);
                             }
 
                             if (testframes == true) {
                                 /* construct payload data bits */
 
-                                uint8_t payload_data_bits[data_bits_per_frame];
+                                uint8_t* payload_data_bits = (uint8_t*)malloc(data_bits_per_frame * sizeof(uint8_t));
                                 ofdm_generate_payload_data_bits(payload_data_bits, data_bits_per_frame);
 
                                 Nerrs_coded[j] = count_errors(payload_data_bits, out_char, data_bits_per_frame);
                                 Terrs_coded += Nerrs_coded[j];
                                 Tbits_coded += data_bits_per_frame;
+                                free(payload_data_bits);
                             }
 
                             fwrite(out_char, sizeof (char), data_bits_per_frame, fout);
                         }
                     } /* if interleaver synced ..... */
+                    free(out_char);
                 } else {
                     /* lpdc_en == false,  external LDPC decoder, so output LLRs */
                     symbols_to_llrs(llr, codeword_symbols_de, codeword_amps_de, EsNo, ofdm->mean_amp, coded_syms_per_frame);
                     fwrite(llr, sizeof (double), coded_bits_per_frame, fout);
                 }
+
+                free(codeword_symbols_de);
+                free(codeword_amps_de);
+                free(llr);
             } else {
                 /* simple hard decision output for uncoded testing, all bits in frame dumped inlcuding UW and txt */
 
@@ -609,9 +616,9 @@ int main(int argc, char *argv[]) {
                    it can interoperate with ofdm_tx.m/ofdm_rx.m */
 
                 int Npayloadbits = Nbitsperframe - (ofdm_nuwbits + ofdm_ntxtbits);
-                uint16_t r[Npayloadbits];
-                uint8_t payload_bits[Npayloadbits];
-                uint8_t tx_bits[Npayloadbits];
+                uint16_t* r = (uint16_t*)malloc(Npayloadbits * sizeof(uint16_t));
+                uint8_t* payload_bits = (uint8_t*)malloc(Npayloadbits * sizeof(uint8_t));
+                uint8_t* tx_bits = (uint8_t*)malloc(Npayloadbits * sizeof(uint8_t));
 
                 ofdm_rand(r, Npayloadbits);
 
@@ -619,7 +626,7 @@ int main(int argc, char *argv[]) {
                     payload_bits[i] = r[i] > 16384;
                 }
 
-                uint8_t txt_bits[ofdm_ntxtbits];
+                uint8_t* txt_bits = (uint8_t*)malloc(ofdm_ntxtbits * sizeof(uint8_t));
 
                 for (i = 0; i < ofdm_ntxtbits; i++) {
                     txt_bits[i] = 0;
@@ -642,6 +649,11 @@ int main(int argc, char *argv[]) {
                     Terrs2 += Nerrs;
                     Tbits2 += Nbitsperframe;
                 }
+
+                free(r);
+                free(payload_bits);
+                free(tx_bits);
+                free(txt_bits);
             }
 
             frame_count++;
@@ -715,7 +727,7 @@ int main(int argc, char *argv[]) {
 
             for (i = 0; i < ofdm_rowsperframe; i++) {
                 for (j = 0; j < ofdm_config->nc; j++) {
-                    phase_est_pilot_log[ofdm_rowsperframe * f + i][j] = ofdm->aphase_est_pilot_log[ofdm_config->nc * i + j];
+                    phase_est_pilot_log[(ofdm_rowsperframe * f + i) * ofdm_config->nc + j] = ofdm->aphase_est_pilot_log[ofdm_config->nc * i + j];
                     rx_amp_log[ofdm_rowsperframe * ofdm_config->nc * f + ofdm_config->nc * i + j] = ofdm->rx_amp[ofdm_config->nc * i + j];
                 }
             }
@@ -727,9 +739,9 @@ int main(int argc, char *argv[]) {
 
             if (log_payload_syms == true) {
                 for (i = 0; i < coded_syms_per_frame; i++) {
-                    payload_syms_log[f][i].real = payload_syms[i].real;
-                    payload_syms_log[f][i].imag = payload_syms[i].imag;
-                    payload_amps_log[f][i] = payload_amps[i];
+                    payload_syms_log[f * Npayloadsymsperframe + i].real = payload_syms[i].real;
+                    payload_syms_log[f * Npayloadsymsperframe + i].imag = payload_syms[i].imag;
+                    payload_amps_log[f * Npayloadsymsperframe + i] = payload_amps[i];
                 }
             }
 
@@ -800,10 +812,48 @@ int main(int argc, char *argv[]) {
 
             /* set return code for Ctest, 1 for fail */
 
-            if ((Tbits == 0) || (Tbits_coded == 0) || (uncoded_ber >= 0.1f) || (coded_ber >= 0.01f))
+            if ((Tbits == 0) || (Tbits_coded == 0) || (uncoded_ber >= 0.1f) || (coded_ber >= 0.01f)) {
+                free(phase_est_pilot_log);
+                free(rx_np_log);
+                free(rx_amp_log);
+                free(Nerrs_raw);
+                free(Nerrs_coded);
+                free(iter);
+                free(parityCheckCount);
+                free(rx_scaled);
+                free(rx_bits);
+                free(rx_bits_char);
+                free(rx_uw);
+                free(txt_bits);
+                free(payload_syms);
+                free(codeword_symbols);
+                free(payload_amps);
+                free(codeword_amps);
+                free(payload_syms_log);
+                free(payload_amps_log);
                 return 1;
+            }
         }
     }
+
+    free(phase_est_pilot_log);
+    free(rx_np_log);
+    free(rx_amp_log);
+    free(Nerrs_raw);
+    free(Nerrs_coded);
+    free(iter);
+    free(parityCheckCount);
+    free(rx_scaled);
+    free(rx_bits);
+    free(rx_bits_char);
+    free(rx_uw);
+    free(txt_bits);
+    free(payload_syms);
+    free(codeword_symbols);
+    free(payload_amps);
+    free(codeword_amps);
+    free(payload_syms_log);
+    free(payload_amps_log);
 
     return 0;
 }

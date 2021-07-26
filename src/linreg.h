@@ -29,7 +29,8 @@
 #define __LINREG__
 
 #include "comp.h"
+#include "dllexport.h"
 
-void linreg(COMP *m, COMP *b, float x[], COMP y[], int n);
+CODEC2_PUBLIC void linreg(COMP *m, COMP *b, float x[], COMP y[], int n);
 
 #endif

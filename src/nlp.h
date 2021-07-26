@@ -29,10 +29,11 @@
 #define __NLP__
 
 #include "comp.h"
+#include "dllexport.h"
 
-void *nlp_create(C2CONST *c2const);
-void nlp_destroy(void *nlp_state);
-float nlp(void *nlp_state, float Sn[], int n, 
+CODEC2_PUBLIC void *nlp_create(C2CONST *c2const);
+CODEC2_PUBLIC void nlp_destroy(void *nlp_state);
+CODEC2_PUBLIC float nlp(void *nlp_state, float Sn[], int n,
 	  float *pitch_samples, COMP Sw[], COMP W[], float *prev_f0);
 
 #endif

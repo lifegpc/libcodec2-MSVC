@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 #include "defines.h"
@@ -1569,8 +1572,8 @@ void codec2_encode_700(struct CODEC2 *c2, unsigned char * bits, short speech[])
     int     indexes[LPC_ORD_LOW];
     int     Wo_index, e_index, i;
     unsigned int nbit = 0;
-    float   bpf_out[4*c2->n_samp];
-    short   bpf_speech[4*c2->n_samp];
+    float* bpf_out = (float*)malloc(4 * c2->n_samp * sizeof(float));
+    short* bpf_speech = (short*)malloc(4 * c2->n_samp * sizeof(short));
     int     spare = 0;
 
     assert(c2 != NULL);
@@ -1621,7 +1624,8 @@ void codec2_encode_700(struct CODEC2 *c2, unsigned char * bits, short speech[])
     }
 
     pack_natural_or_gray(bits, &nbit, spare, 2, c2->gray);
-
+    free(bpf_out);
+    free(bpf_speech);
     assert(nbit == (unsigned)codec2_bits_per_frame(c2));
 }
 
@@ -1781,8 +1785,8 @@ void codec2_encode_700b(struct CODEC2 *c2, unsigned char * bits, short speech[])
     int     indexes[3];
     int     Wo_index, e_index, i;
     unsigned int nbit = 0;
-    float   bpf_out[4*c2->n_samp];
-    short   bpf_speech[4*c2->n_samp];
+    float* bpf_out = (float*)malloc(4 * c2->n_samp * sizeof(float));
+    short* bpf_speech = (short*)malloc(4 * c2->n_samp * sizeof(short));
     int     spare = 0;
 
     assert(c2 != NULL);
@@ -1833,7 +1837,8 @@ void codec2_encode_700b(struct CODEC2 *c2, unsigned char * bits, short speech[])
     }
 
     pack_natural_or_gray(bits, &nbit, spare, 1, c2->gray);
-
+    free(bpf_out);
+    free(bpf_speech);
     assert(nbit == (unsigned)codec2_bits_per_frame(c2));
 }
 
@@ -1986,8 +1991,8 @@ void codec2_encode_700c(struct CODEC2 *c2, unsigned char * bits, short speech[])
     }
 
     int K = 20;
-    float rate_K_vec[K], mean;
-    float rate_K_vec_no_mean[K], rate_K_vec_no_mean_[K];
+    float* rate_K_vec = (float*)malloc(K * sizeof(float)), mean;
+    float* rate_K_vec_no_mean = (float*)malloc(K * sizeof(float)), * rate_K_vec_no_mean_ = (float*)malloc(K * sizeof(float));
 
     newamp1_model_to_indexes(&c2->c2const, 
                              indexes, 
@@ -2015,6 +2020,9 @@ void codec2_encode_700c(struct CODEC2 *c2, unsigned char * bits, short speech[])
     pack_natural_or_gray(bits, &nbit, indexes[3], 6, 0);
 
     assert(nbit == (unsigned)codec2_bits_per_frame(c2));
+    free(rate_K_vec);
+    free(rate_K_vec_no_mean);
+    free(rate_K_vec_no_mean_);
 }
 
 
@@ -2045,8 +2053,10 @@ void codec2_decode_700c(struct CODEC2 *c2, short speech[], const unsigned char *
     indexes[3] = unpack_natural_or_gray(bits, &nbit, 6, 0);
     
     int M = 4;
-    COMP  HH[M][MAX_AMP+1];
-    float interpolated_surface_[M][NEWAMP1_K];
+    typedef COMP M_COMP[MAX_AMP + 1];
+    M_COMP* HH = (M_COMP*)malloc(M * sizeof(M_COMP));
+    typedef float M_FLOAT[NEWAMP1_K];
+    M_FLOAT* interpolated_surface_ = (M_FLOAT*)malloc(M * sizeof(M_FLOAT));
 
     newamp1_indexes_to_model(&c2->c2const,
                              model,
@@ -2068,6 +2078,8 @@ void codec2_decode_700c(struct CODEC2 *c2, short speech[], const unsigned char *
        /* 700C is a little quiter so lets apply some experimentally derived audio gain */
        synthesise_one_frame(c2, &speech[c2->n_samp*i], &model[i], &HH[i][0], 1.5);
    }
+   free(HH);
+   free(interpolated_surface_);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -2151,7 +2163,8 @@ float codec2_get_energy(struct CODEC2 *c2, const unsigned char *bits)
 	   ( CODEC2_MODE_ACTIVE(CODEC2_MODE_450PWB, c2->mode))
 	   );
     MODEL model;
-    float xq_dec[2] = {};
+    float xq_dec[2];
+    memset(xq_dec, 0, 2 * sizeof(float));
     int e_index, WoE_index;
     float e;
     unsigned int nbit;
@@ -2250,7 +2263,7 @@ void codec2_encode_450(struct CODEC2 *c2, unsigned char * bits, short speech[])
     int          indexes[4], i,h, M=4;
     unsigned int nbit = 0;
     int plosiv = 0;
-    float energydelta[M];
+    float* energydelta = (float*)malloc(M * sizeof(float));
 	int spectralCounter;
 
     assert(c2 != NULL);
@@ -2297,8 +2310,8 @@ void codec2_encode_450(struct CODEC2 *c2, unsigned char * bits, short speech[])
     
 
     int K = 29;
-    float rate_K_vec[K], mean;
-    float rate_K_vec_no_mean[K], rate_K_vec_no_mean_[K];
+    float* rate_K_vec = (float*)malloc(K * sizeof(float)), mean;
+    float* rate_K_vec_no_mean = (float*)malloc(K * sizeof(float)), * rate_K_vec_no_mean_ = (float*)malloc(K * sizeof(float));
     if(plosiv > 0){
 		plosiv = 1;
 	}
@@ -2320,6 +2333,10 @@ void codec2_encode_450(struct CODEC2 *c2, unsigned char * bits, short speech[])
     pack_natural_or_gray(bits, &nbit, indexes[3], 6, 0);
 
     assert(nbit == (unsigned)codec2_bits_per_frame(c2));
+    free(energydelta);
+    free(rate_K_vec);
+    free(rate_K_vec_no_mean);
+    free(rate_K_vec_no_mean_);
 }
 
 
@@ -2349,8 +2366,10 @@ void codec2_decode_450(struct CODEC2 *c2, short speech[], const unsigned char * 
     indexes[3] = unpack_natural_or_gray(bits, &nbit, 6, 0);
     
     int M = 4;
-    COMP  HH[M][MAX_AMP+1];
-    float interpolated_surface_[M][NEWAMP2_K];
+    typedef COMP M_COMP[MAX_AMP + 1];
+    M_COMP* HH = (M_COMP*)malloc(M * sizeof(M_COMP));
+    typedef float M_FLOAT[NEWAMP2_K];
+    M_FLOAT* interpolated_surface_ = (M_FLOAT*)malloc(M * sizeof(M_FLOAT));
     int pwbFlag = 0;
 
     newamp2_indexes_to_model(&c2->c2const,
@@ -2372,6 +2391,8 @@ void codec2_decode_450(struct CODEC2 *c2, short speech[], const unsigned char * 
    for(i=0; i<M; i++) {
        synthesise_one_frame(c2, &speech[c2->n_samp*i], &model[i], &HH[i][0], 1.5);
    }
+   free(HH);
+   free(interpolated_surface_);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -2402,8 +2423,10 @@ void codec2_decode_450pwb(struct CODEC2 *c2, short speech[], const unsigned char
     indexes[3] = unpack_natural_or_gray(bits, &nbit, 6, 0);
     
     int M = 4;
-    COMP  HH[M][MAX_AMP+1];
-    float interpolated_surface_[M][NEWAMP2_16K_K];
+    typedef COMP M_COMP[MAX_AMP + 1];
+    M_COMP*  HH = (M_COMP*)malloc(M * sizeof(M_COMP));
+    typedef float M_FLOAT[NEWAMP2_16K_K];
+    M_FLOAT* interpolated_surface_ = (M_FLOAT*)malloc(M * sizeof(M_FLOAT));
     int pwbFlag = 1;
 
     newamp2_indexes_to_model(&c2->c2const,
@@ -2425,6 +2448,8 @@ void codec2_decode_450pwb(struct CODEC2 *c2, short speech[], const unsigned char
    for(i=0; i<M; i++) {
        synthesise_one_frame(c2, &speech[c2->n_samp*i], &model[i], &HH[i][0], 1.5);
    }
+   free(HH);
+   free(interpolated_surface_);
 }
 
 
@@ -2700,7 +2725,7 @@ void codec2_load_codebook(struct CODEC2 *codec2_state, int num, char *filename) 
 	exit(1);
     }
     //fprintf(stderr, "reading newamp1vq_cb[%d] k=%d m=%d\n", num, newamp1vq_cb[num].k, newamp1vq_cb[num].m);
-    float tmp[newamp1vq_cb[num].k*newamp1vq_cb[num].m];
+    float* tmp = (float*)malloc(newamp1vq_cb[num].k * newamp1vq_cb[num].m * sizeof(float));
     int nread = fread(tmp, sizeof(float), newamp1vq_cb[num].k*newamp1vq_cb[num].m, f);
     float *p = (float*)newamp1vq_cb[num].cb;
     for(int i=0; i<newamp1vq_cb[num].k*newamp1vq_cb[num].m; i++)
@@ -2708,6 +2733,7 @@ void codec2_load_codebook(struct CODEC2 *codec2_state, int num, char *filename) 
     // fprintf(stderr, "nread = %d %f %f\n", nread, newamp1vq_cb[num].cb[0], newamp1vq_cb[num].cb[1]);
     assert(nread == newamp1vq_cb[num].k*newamp1vq_cb[num].m);
     fclose(f);
+    free(tmp);
 }
 #endif
 

@@ -31,7 +31,9 @@
 #ifndef __LSP__
 #define __LSP__
 
-int lpc_to_lsp (float *a, int lpcrdr, float *freq, int nb, float delta);
-void lsp_to_lpc(float *freq, float *ak, int lpcrdr);
+#include "dllexport.h"
+
+CODEC2_PUBLIC int lpc_to_lsp (float *a, int lpcrdr, float *freq, int nb, float delta);
+CODEC2_PUBLIC void lsp_to_lpc(float *freq, float *ak, int lpcrdr);
 
 #endif

@@ -33,7 +33,9 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <getopt.h>
 
 #include "defines.h"
@@ -395,19 +397,19 @@ int main(int argc, char *argv[])
     int   n_samp = c2const.n_samp;
     int   m_pitch = c2const.m_pitch;
 
-    short buf[N_SAMP];	/* input/output buffer                   */
-    float buf_float[N_SAMP];
-    float Sn[m_pitch];	/* float input speech samples            */
-    float Sn_pre[m_pitch];	/* pre-emphasised input speech samples   */
+    short* buf = (short*)malloc(N_SAMP * sizeof(short));	/* input/output buffer                   */
+    float* buf_float = (float*)malloc(N_SAMP * sizeof(float));
+    float* Sn = (float*)malloc(m_pitch * sizeof(float));	/* float input speech samples            */
+    float* Sn_pre = (float*)malloc(m_pitch * sizeof(float));	/* pre-emphasised input speech samples   */
     COMP  Sw[FFT_ENC];	/* DFT of Sn[]                           */
     codec2_fft_cfg  fft_fwd_cfg;
     codec2_fftr_cfg  fftr_fwd_cfg;
     codec2_fftr_cfg  fftr_inv_cfg;
-    float w[m_pitch];	        /* time domain hamming window            */
+    float* w = (float*)malloc(m_pitch * sizeof(float));	        /* time domain hamming window            */
     COMP  W[FFT_ENC];	/* DFT of w[]                            */
     MODEL model;
-    float Pn[2*N_SAMP];	/* trapezoidal synthesis window          */
-    float Sn_[2*N_SAMP];	/* synthesised speech */
+    float* Pn = (float*)malloc(2 * N_SAMP * sizeof(float));	/* trapezoidal synthesis window          */
+    float* Sn_ = (float*)malloc(2 * N_SAMP * sizeof(float));	/* synthesised speech */
     int   i,m;		/* loop variable                         */
     int   frames;
     float prev_f0;
@@ -416,7 +418,7 @@ int main(int argc, char *argv[])
     float sum_snr;
 
     float pre_mem = 0.0, de_mem = 0.0;
-    float ak[1+order];
+    float* ak = (float*)malloc((1 + order) * sizeof(float));
     // COMP  Sw_[FFT_ENC];
     // COMP  Ew[FFT_ENC];
 
@@ -426,15 +428,15 @@ int main(int argc, char *argv[])
 
 
     MODEL prev_model;
-    float lsps[order];
+    float* lsps = (float*)malloc(order * sizeof(float));
     float e, prev_e;
-    int   lsp_indexes[order];
-    float lsps_[order];
+    int* lsp_indexes = (int*)malloc(order * sizeof(int));
+    float* lsps_ = (float*)malloc(order * sizeof(float));
     float Woe_[2];
 
-    float lsps_dec[4][order], e_dec[4], weight, weight_inc, ak_dec[4][order];
+    float* lsps_dec = (float*)malloc(4 * order * sizeof(float)), e_dec[4], weight, weight_inc, * ak_dec = (float*)malloc(4 * order * sizeof(float));
     MODEL model_dec[4], prev_model_dec;
-    float prev_lsps_dec[order], prev_e_dec;
+    float* prev_lsps_dec = (float*)malloc(order * sizeof(float)), prev_e_dec;
 
     void *nlp_states;
     float hpf_states[2];
@@ -442,7 +444,7 @@ int main(int argc, char *argv[])
     struct PEXP *pexp = NULL;
     struct AEXP *aexp = NULL;
     #endif
-    float bpf_buf[BPF_N+N_SAMP];
+    float* bpf_buf = (float*)malloc((BPF_N + N_SAMP) * sizeof(float));
     float lspmelvq_mse = 0.0;
 
     COMP Aw[FFT_ENC];
@@ -521,7 +523,7 @@ int main(int argc, char *argv[])
 
     /* mel resampling experiments */
 
-    float rate_K_sample_freqs_kHz[K];
+    float* rate_K_sample_freqs_kHz = (float*)malloc(K * sizeof(float));
     if (mel_resampling) {
         float mel_start = ftomel(100); 
         float mel_end = ftomel(0.95*Fs/2);
@@ -625,9 +627,10 @@ int main(int argc, char *argv[])
 	\*------------------------------------------------------------*/
 
         if (mel_resampling) {
-            float rate_K_vec[K];
+            float* rate_K_vec = (float*)malloc(K * sizeof(float));
             resample_const_rate_f(&c2const, &model, rate_K_vec, rate_K_sample_freqs_kHz, K);
             resample_rate_L(&c2const, &model, rate_K_vec, rate_K_sample_freqs_kHz, K);
+            free(rate_K_vec);
         }
 
 	/*------------------------------------------------------------*\
@@ -711,11 +714,12 @@ int main(int argc, char *argv[])
             if (ten_ms_centre) {
                 int n_10_ms = Fs*0.01;
                 int n_5_ms = Fs*0.005;
-                short buf[n_10_ms];
+                short* buf = (short*)malloc(n_10_ms * sizeof(short));
                 for(i=0; i<n_10_ms; i++) {
                     buf[i] = Sn[m_pitch/2-n_5_ms+i];
                 }
-                fwrite(buf, n_10_ms, sizeof(short), ften_ms_centre);                  
+                fwrite(buf, n_10_ms, sizeof(short), ften_ms_centre); 
+                free(buf);
             }
             
             #ifdef DUMP
@@ -784,8 +788,8 @@ int main(int argc, char *argv[])
 
 	    if (lspmel) {
 		float f, f_;
-		float mel[order];
-		int   mel_indexes[order];
+        float* mel = (float*)malloc(order * sizeof(float));
+        int* mel_indexes = (int*)malloc(order * sizeof(int));
 
 		for(i=0; i<order; i++) {
 		    f = (4000.0/PI)*lsps[i];
@@ -814,13 +818,14 @@ int main(int argc, char *argv[])
                 /* read in VQed lsp-mels from octave/melvq.m */
 
                 if (lspmelread) {
-                    float mel_[order];
+                    float* mel_ = (float*)malloc(order * sizeof(float));
                     int ret = fread(mel_, sizeof(float), order, flspmel);
                     assert(ret == order);
                     for(i=0; i<order; i++) {
                         lspmelvq_mse += pow(mel[i] - mel_[i], 2.0);
                         mel[i] = mel_[i];
                     }
+                    free(mel_);
                 }
 
                 if (lspmelvq) {
@@ -838,6 +843,9 @@ int main(int argc, char *argv[])
 			mel[i-1]-=MEL_ROUND/2;
                         i = 1;
                     }
+
+            free(mel);
+            free(mel_indexes);
 		}
 
 		for(i=0; i<order; i++) {
@@ -869,7 +877,6 @@ int main(int argc, char *argv[])
 
 		quantise_WoE(&c2const, &model, &e, Woe_);
 	    }
-
 	}
 
         if (amread) {
@@ -920,8 +927,8 @@ int main(int argc, char *argv[])
         model_dec[decimate-1] = model;
 
         if ((frames % decimate) == 0) {
-            for(i=0; i<order; i++)
-                lsps_dec[decimate-1][i] = lsps_[i];
+            for (i = 0; i < order; i++)
+                lsps_dec[(decimate - 1) * order + i] = lsps_[i];
             e_dec[decimate-1] = e;
             model_dec[decimate-1] = model;
 
@@ -930,7 +937,7 @@ int main(int argc, char *argv[])
             weight_inc = 1.0/decimate;
             for(i=0, weight=weight_inc; i<decimate-1; i++, weight += weight_inc) {
                 //model_dec[i].voiced = model_dec[decimate-1].voiced;
-                interpolate_lsp_ver2(&lsps_dec[i][0], prev_lsps_dec, &lsps_dec[decimate-1][0], weight, order);
+                interpolate_lsp_ver2(&lsps_dec[i * order], prev_lsps_dec, &lsps_dec[(decimate - 1) * order], weight, order);
                 interp_Wo2(&model_dec[i], &prev_model_dec, &model_dec[decimate-1], weight, c2const.Wo_min);
                 e_dec[i] = interp_energy2(prev_e_dec, e_dec[decimate-1],weight);
             }
@@ -939,14 +946,14 @@ int main(int argc, char *argv[])
 
             for(i=0; i<decimate; i++) {
                 if (lpc_model) {
-                    lsp_to_lpc(&lsps_dec[i][0], &ak_dec[i][0], order);
-                    aks_to_M2(fftr_fwd_cfg, &ak_dec[i][0], order, &model_dec[i], e_dec[i],
+                    lsp_to_lpc(&lsps_dec[i * order], &ak_dec[i * order], order);
+                    aks_to_M2(fftr_fwd_cfg, &ak_dec[i * order], order, &model_dec[i], e_dec[i],
                               &snr, 0, simlpcpf, lpcpf, 1, LPCPF_BETA, LPCPF_GAMMA, Aw);
                     apply_lpc_correction(&model_dec[i]);
                     sum_snr += snr;
                     #ifdef DUMP
-                    dump_lsp_(&lsps_dec[i][0]);
-                    dump_ak_(&ak_dec[i][0], order);
+                    dump_lsp_(&lsps_dec[i * order]);
+                    dump_ak_(&ak_dec[i * order], order);
                     dump_quantised_model(&model_dec[i]);
                     #endif
                 }
@@ -981,8 +988,8 @@ int main(int argc, char *argv[])
 
             prev_model_dec = model_dec[decimate-1];
             prev_e_dec = e_dec[decimate-1];
-            for(i=0; i<LPC_ORD; i++)
-                prev_lsps_dec[i] = lsps_dec[decimate-1][i];
+            for (i = 0; i < LPC_ORD; i++)
+                prev_lsps_dec[i] = lsps_dec[(decimate - 1) * order + i];
        }
 
     }
@@ -1029,6 +1036,23 @@ int main(int argc, char *argv[])
     if (flspEWov != NULL) fclose(flspEWov);
     if (ften_ms_centre != NULL) fclose(ften_ms_centre);
     
+    free(buf);
+    free(buf_float);
+    free(Sn);
+    free(Sn_pre);
+    free(w);
+    free(Pn);
+    free(Sn_);
+    free(ak);
+    free(lsps);
+    free(lsp_indexes);
+    free(lsps_);
+    free(lsps_dec);
+    free(ak_dec);
+    free(prev_lsps_dec);
+    free(bpf_buf);
+    free(rate_K_sample_freqs_kHz);
+
     return 0;
 }
 

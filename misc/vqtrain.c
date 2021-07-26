@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
     /* optionally output residual error for next stage VQ */
 
     if (fres != NULL) {
-        float res[k];
+        float* res = (float*)malloc(k * sizeof(float));
 	rewind(ftrain);
 	for(j=0; j<J; j++) {
 	    ret = fread(vec, sizeof(float), k, ftrain);
@@ -251,6 +251,7 @@ int main(int argc, char *argv[]) {
             fwrite(res, sizeof(float), k, fres);
 	}
         fclose(fres);
+        free(res);
     }
     
     fclose(fvq);

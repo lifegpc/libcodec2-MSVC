@@ -237,7 +237,7 @@ void mag_to_phase(float phase[],             /* Nfft/2+1 output phase samples in
                   codec2_fft_cfg fft_inv_cfg
                   )
 {
-    COMP Sdb[Nfft], c[Nfft], cf[Nfft], Cf[Nfft];
+    COMP* Sdb = (COMP*)malloc(Nfft * sizeof(COMP)), * c = (COMP*)malloc(Nfft * sizeof(COMP)), * cf = (COMP*)malloc(Nfft * sizeof(COMP)), * Cf = (COMP*)malloc(Nfft * sizeof(COMP));
     int  Ns = Nfft/2+1;
     int  i;
 
@@ -285,5 +285,8 @@ void mag_to_phase(float phase[],             /* Nfft/2+1 output phase samples in
         phase[i] = Cf[i].imag/scale;
     }
 
-    
+    free(Sdb);
+    free(c);
+    free(cf);
+    free(Cf);
 }

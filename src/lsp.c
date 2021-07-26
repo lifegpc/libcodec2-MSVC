@@ -93,7 +93,7 @@ cheb_poly_eva(float *coef,float x,int order)
 {
     int i;
     float *t,*u,*v,sum;
-    float T[(order / 2) + 1];
+    float* T = (float*)malloc(((order / 2) + 1) * sizeof(float));
 
     /* Initialise pointers */
 
@@ -115,7 +115,8 @@ cheb_poly_eva(float *coef,float x,int order)
 
     for(i=0;i<=order/2;i++)
 	sum+=coef[(order/2)-i]**t++;
-
+    
+    free(T);
     return sum;
 }
 
@@ -147,8 +148,8 @@ int lpc_to_lsp (float *a, int order, float *freq, int nb, float delta)
     float *pt;                	/* ptr used for cheb_poly_eval()
 				   whether P' or Q' 			*/
     int roots=0;              	/* number of roots found 	        */
-    float Q[order + 1];
-    float P[order + 1];
+    float* Q = (float*)malloc((order + 1) * sizeof(float));
+    float* P = (float*)malloc((order + 1) * sizeof(float));
 
     flag = 1;
     m = order/2;            	/* order of P'(z) & Q'(z) polynimials 	*/
@@ -244,6 +245,9 @@ int lpc_to_lsp (float *a, int order, float *freq, int nb, float delta)
 	freq[i] = acosf(freq[i]);
     }
 
+    free(Q);
+    free(P);
+
     return(roots);
 }
 
@@ -268,8 +272,8 @@ void lsp_to_lpc(float *lsp, float *ak, int order)
     int i,j;
     float xout1,xout2,xin1,xin2;
     float *pw,*n1,*n2,*n3,*n4 = 0;
-    float freq[order];
-    float Wp[(order * 4) + 2];
+    float* freq = (float*)malloc(order * sizeof(float));
+    float* Wp = (float*)malloc(((order * 4) + 2) * sizeof(float));
 
     /* convert from radians to the x=cos(w) domain */
 
@@ -317,5 +321,7 @@ void lsp_to_lpc(float *lsp, float *ak, int order)
 	xin1 = 0.0;
 	xin2 = 0.0;
     }
+    free(freq);
+    free(Wp);
 }
 

@@ -29,6 +29,7 @@
 #define __CODEC2_FM__
 
 #include "comp.h"
+#include "dllexport.h"
 
 struct FM {
     float  Fs;               /* setme: sample rate                  */
@@ -43,11 +44,11 @@ struct FM {
     COMP   lo_phase;
 };
 
-struct FM *fm_create(int nsam);
-void fm_destroy(struct FM *fm_states);
-void fm_demod(struct FM *fm, float rx_out[], float rx[]);
-void fm_mod(struct FM *fm, float tx_in[], float tx_out[]);
-void fm_mod_comp(struct FM *fm_states, float tx_in[], COMP tx_out[]);
+CODEC2_PUBLIC struct FM *fm_create(int nsam);
+CODEC2_PUBLIC void fm_destroy(struct FM *fm_states);
+CODEC2_PUBLIC void fm_demod(struct FM *fm, float rx_out[], float rx[]);
+CODEC2_PUBLIC void fm_mod(struct FM *fm, float tx_in[], float tx_out[]);
+CODEC2_PUBLIC void fm_mod_comp(struct FM *fm_states, float tx_in[], COMP tx_out[]);
 
 #endif
 

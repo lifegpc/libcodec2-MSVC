@@ -39,6 +39,7 @@ extern "C"
 
 #include "codec2_ofdm.h"
 #include "filter.h"
+#include "dllexport.h"
     
 #ifndef M_PI
 #define M_PI        3.14159265358979323846f
@@ -47,8 +48,13 @@ extern "C"
 #define TAU         (2.0f * M_PI)
 #define ROT45       (M_PI / 4.0f)
 
+#ifndef _MSC_VER
 #define cmplx(value) (cosf(value) + sinf(value) * I)
 #define cmplxconj(value) (cosf(value) + sinf(value) * -I)
+#else
+#define cmplx(value) (_FCbuild(cosf(value), sinf(value)))
+#define cmplxconj(value) (_FCbuild(cosf(value), -sinf(value)))
+#endif
 
 /* modem state machine states */
 typedef enum {
@@ -96,11 +102,11 @@ struct OFDM {
 
     struct quisk_cfFilter *ofdm_tx_bpf;
     
-    complex float *pilot_samples;
-    complex float *rxbuf;
-    complex float *pilots;
-    complex float **rx_sym;
-    complex float *rx_np;
+    _Fcomplex* pilot_samples;
+    _Fcomplex* rxbuf;
+    _Fcomplex* pilots;
+    _Fcomplex** rx_sym;
+    _Fcomplex* rx_np;
 
     float *rx_amp;
     float *aphase_est_pilot_log;
@@ -122,7 +128,7 @@ struct OFDM {
     int phase_est_bandwidth_mode;
 
     // Complex
-    complex float foff_metric;
+    _Fcomplex foff_metric;
      
     // Float
     float foff_est_gain;
@@ -158,16 +164,16 @@ struct OFDM {
 
 /* Prototypes */
 
-complex float qpsk_mod(int *);
-void qpsk_demod(complex float, int *);
-void ofdm_txframe(struct OFDM *, complex float *, complex float []);
-void ofdm_assemble_modem_frame(struct OFDM *, uint8_t [], uint8_t [], uint8_t []);
-void ofdm_assemble_modem_frame_symbols(complex float [], COMP [], uint8_t []);
-void ofdm_disassemble_modem_frame(struct OFDM *, uint8_t [], COMP [], float [], short []);
-void ofdm_rand(uint16_t [], int);
-void ofdm_generate_payload_data_bits(uint8_t [], int);
-int ofdm_get_phase_est_bandwidth_mode(struct OFDM *);
-void ofdm_set_phase_est_bandwidth_mode(struct OFDM *, int);
+CODEC2_PUBLIC _Fcomplex qpsk_mod(int *);
+CODEC2_PUBLIC void qpsk_demod(_Fcomplex, int *);
+CODEC2_PUBLIC void ofdm_txframe(struct OFDM *, _Fcomplex*, _Fcomplex[]);
+CODEC2_PUBLIC void ofdm_assemble_modem_frame(struct OFDM *, uint8_t [], uint8_t [], uint8_t []);
+CODEC2_PUBLIC void ofdm_assemble_modem_frame_symbols(_Fcomplex[], COMP [], uint8_t []);
+CODEC2_PUBLIC void ofdm_disassemble_modem_frame(struct OFDM *, uint8_t [], COMP [], float [], short []);
+CODEC2_PUBLIC void ofdm_rand(uint16_t [], int);
+CODEC2_PUBLIC void ofdm_generate_payload_data_bits(uint8_t [], int);
+CODEC2_PUBLIC int ofdm_get_phase_est_bandwidth_mode(struct OFDM *);
+CODEC2_PUBLIC void ofdm_set_phase_est_bandwidth_mode(struct OFDM *, int);
 
 #ifdef __cplusplus
 }

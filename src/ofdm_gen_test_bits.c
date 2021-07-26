@@ -175,8 +175,8 @@ int main(int argc, char *argv[])
     if (verbose)
         fprintf(stderr, "Nbitsperframe: %d\n", Nbitsperframe);
 
-    uint8_t tx_bits[Nbitsperframe];
-    uint8_t txt_bits[ofdm_ntxtbits];
+    uint8_t* tx_bits = (uint8_t*)malloc(Nbitsperframe * sizeof(uint8_t));
+    uint8_t* txt_bits = (uint8_t*)malloc(ofdm_ntxtbits * sizeof(uint8_t));
 
     for (i = 0; i< ofdm_ntxtbits; i++) {
         txt_bits[i] = 0;
@@ -222,18 +222,20 @@ int main(int argc, char *argv[])
 	        //fprintf(stderr, "txt_bits[%d] = %d\n", k, txt_bits[k]);
             }
 
-            uint16_t r[data_bits_per_frame];
+            uint16_t* r = (uint16_t*)malloc(data_bits_per_frame * sizeof(uint16_t));
 
             ofdm_rand(r, data_bits_per_frame);
 
             for(i=0; i<data_bits_per_frame; i++) {
                 tx_bits[i] = r[i]>16384;
             }
+
+            free(r);
         } else { // (!ldpc_en)
 
             int Npayloadbits = Nbitsperframe-(ofdm_nuwbits+ofdm_ntxtbits);
-            uint16_t r[Npayloadbits];
-            uint8_t  payload_bits[Npayloadbits];
+            uint16_t* r = (uint16_t*)malloc(Npayloadbits * sizeof(uint16_t));
+            uint8_t* payload_bits = (uint8_t*)malloc(Npayloadbits * sizeof(uint8_t));
 
             ofdm_rand(r, Npayloadbits);
 
@@ -242,6 +244,9 @@ int main(int argc, char *argv[])
             }
 
             ofdm_assemble_modem_frame(ofdm, tx_bits, payload_bits, txt_bits);
+
+            free(r);
+            free(payload_bits);
 	}
 
 	fwrite(tx_bits, sizeof(char), Nbitsperframe, fout);
@@ -251,6 +256,9 @@ int main(int argc, char *argv[])
         fclose(fout);
 
     ofdm_destroy(ofdm);
+
+    free(tx_bits);
+    free(txt_bits);
 
     return 0;
 }

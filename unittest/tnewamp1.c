@@ -37,6 +37,11 @@
 #include "newamp1.h"
 #include "quantise.h"
 
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+
 #define FRAMES 300
 
 int main(int argc, char *argv[]) {
@@ -44,11 +49,11 @@ int main(int argc, char *argv[]) {
     C2CONST c2const = c2const_create(Fs, N_S);
     int   n_samp = c2const.n_samp;
     int   m_pitch = c2const.m_pitch;
-    short buf[n_samp];	        /* input/output buffer                   */
-    float Sn[m_pitch];	        /* float input speech samples            */
+    short* buf = (short*)malloc(n_samp * sizeof(short));	        /* input/output buffer                   */
+    float* Sn = (float*)malloc(m_pitch * sizeof(float));	        /* float input speech samples            */
     COMP  Sw[FFT_ENC];	        /* DFT of Sn[]                           */
     codec2_fft_cfg fft_fwd_cfg; /* fwd FFT states                        */
-    float w[m_pitch];	        /* time domain hamming window            */
+    float* w = (float*)malloc(m_pitch * sizeof(float));	        /* time domain hamming window            */
     COMP  W[FFT_ENC];	        /* DFT of w[]                            */
     MODEL model;
     void *nlp_states;
@@ -58,6 +63,9 @@ int main(int argc, char *argv[]) {
     
     if (argc != 2) {
         printf("usage: ./tnewamp1 RawFile\n");
+        free(buf);
+        free(Sn);
+        free(w);
         exit(1);
     }
     nlp_states = nlp_create(&c2const);
@@ -73,22 +81,22 @@ int main(int argc, char *argv[]) {
     }
 
     int K = 20;
-    float rate_K_sample_freqs_kHz[K];
+    float* rate_K_sample_freqs_kHz = (float*)malloc(K * sizeof(float));
     float model_octave[FRAMES][MAX_AMP+2];    // model params in matrix format, useful for C <-> Octave  
-    float rate_K_surface[FRAMES][K];          // rate K vecs for each frame, form a surface that makes pretty graphs
-    float rate_K_surface_no_mean[FRAMES][K];  // mean removed surface  
-    float rate_K_surface_no_mean_[FRAMES][K]; // quantised mean removed surface  
+    float* rate_K_surface = (float*)malloc(FRAMES * K * sizeof(float));          // rate K vecs for each frame, form a surface that makes pretty graphs
+    float* rate_K_surface_no_mean = (float*)malloc(FRAMES * K * sizeof(float));  // mean removed surface  
+    float* rate_K_surface_no_mean_ = (float*)malloc(FRAMES * K * sizeof(float)); // quantised mean removed surface  
     float mean[FRAMES];
     float mean_[FRAMES];
-    float rate_K_surface_[FRAMES][K];         // quantised rate K vecs for each frame
-    float interpolated_surface_[FRAMES][K];   // dec/interpolated surface
+    float* rate_K_surface_ = (float*)malloc(FRAMES * K * sizeof(float));         // quantised rate K vecs for each frame
+    float* interpolated_surface_ = (float*)malloc(FRAMES * K * sizeof(float));   // dec/interpolated surface
     //int   voicing[FRAMES];
     int   voicing_[FRAMES];
     float model_octave_[FRAMES][MAX_AMP+2];
     COMP  H[FRAMES][MAX_AMP];
     int indexes[FRAMES][NEWAMP1_N_INDEXES];
     float se = 0.0;
-    float eq[K];
+    float* eq = (float*)malloc(K * sizeof(float));
         
     for(k=0; k<K; k++)
         eq[k] = 0.0;
@@ -102,8 +110,8 @@ int main(int argc, char *argv[]) {
             H[f][m].real = 0.0;
             H[f][m].imag = 0.0;
         }
-        for(k=0; m<K; k++)
-            interpolated_surface_[f][k] = 0.0;
+        for (k = 0; m < K; k++)
+            interpolated_surface_[f * K + k] = 0.0;
         voicing_[f] = 0;
     }
 
@@ -115,6 +123,16 @@ int main(int argc, char *argv[]) {
     FILE *fin = fopen(argv[1], "rb");
     if (fin == NULL) {
         fprintf(stderr, "Problem opening hts1.raw\n");
+        free(buf);
+        free(Sn);
+        free(w);
+        free(rate_K_sample_freqs_kHz);
+        free(rate_K_surface);
+        free(rate_K_surface_no_mean);
+        free(rate_K_surface_no_mean_);
+        free(rate_K_surface_);
+        free(interpolated_surface_);
+        free(eq);
         exit(1);
     }
 
@@ -148,17 +166,17 @@ int main(int argc, char *argv[]) {
         newamp1_model_to_indexes(&c2const, 
                                  &indexes[f][0], 
                                  &model, 
-                                 &rate_K_surface[f][0], 
+                                 &rate_K_surface[f * K], 
                                  rate_K_sample_freqs_kHz,
                                  K,
                                  &mean[f],
-                                 &rate_K_surface_no_mean[f][0],
-                                 &rate_K_surface_no_mean_[f][0],
+                                 &rate_K_surface_no_mean[f * K],
+                                 &rate_K_surface_no_mean_[f * K],
                                  &se,
                                  eq, 0);
 
-        newamp1_indexes_to_rate_K_vec(&rate_K_surface_[f][0],
-                                      &rate_K_surface_no_mean_[f][0],
+        newamp1_indexes_to_rate_K_vec(&rate_K_surface_[f * K],
+                                      &rate_K_surface_no_mean_[f * K],
                                       rate_K_sample_freqs_kHz,
                                       K,
                                       &mean_[f],
@@ -185,9 +203,10 @@ int main(int argc, char *argv[]) {
 
     /* Decoder */
 
-    MODEL model__[M];
-    float prev_rate_K_vec_[K];
-    COMP  HH[M][MAX_AMP+1];
+    MODEL* model__ = (MODEL*)malloc(M * sizeof(MODEL));
+    float* prev_rate_K_vec_ = (float*)malloc(K * sizeof(float));
+    typedef COMP M_COMP[MAX_AMP + 1];
+    M_COMP* HH = (M_COMP*)malloc(M * sizeof(M_COMP));
     float Wo_left;
     int   voicing_left;
 
@@ -204,7 +223,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"\n");
     for(f=M-1; f<FRAMES; f+=M) {
 
-        float a_interpolated_surface_[M][K];
+        float* a_interpolated_surface_ = (float*)malloc(M * K * sizeof(float));
         newamp1_indexes_to_model(&c2const,
                                  model__,
                                  (COMP*)HH,
@@ -252,7 +271,7 @@ int main(int argc, char *argv[]) {
         if (f >= M) {
            for(i=0; i<M; i++) {
                for(k=0; k<K; k++) {
-                   interpolated_surface_[f-M+i][k] = a_interpolated_surface_[i][k];
+                   interpolated_surface_[(f - M + i) * K + k] = a_interpolated_surface_[i * K + k];
                }
            }
           
@@ -272,6 +291,8 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+
+        free(a_interpolated_surface_);
     }
 
     fclose(fin);
@@ -296,6 +317,21 @@ int main(int argc, char *argv[]) {
     fclose(fout);
 
     printf("Done! Now run\n  octave:1> tnewamp1(\"../build_linux/src/hts1a\")\n");
+
+    free(buf);
+    free(Sn);
+    free(w);
+    free(rate_K_sample_freqs_kHz);
+    free(rate_K_surface);
+    free(rate_K_surface_no_mean);
+    free(rate_K_surface_no_mean_);
+    free(rate_K_surface_);
+    free(interpolated_surface_);
+    free(eq);
+    free(model__);
+    free(prev_rate_K_vec_);
+    free(HH);
+
     return 0;
 }
 

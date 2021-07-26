@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     ofdm_nuwbits = (ofdm_config->ns - 1) * ofdm_config->bps - ofdm_config->txtbits;
     ofdm_ntxtbits = ofdm_config->txtbits;
 
-    char  tx_bits_char[ofdm_bitsperframe];
+    char* tx_bits_char = (char*)malloc(ofdm_bitsperframe);
 
 
     for(i=0; i<ofdm_bitsperframe; i++) {
@@ -109,6 +109,8 @@ int main(int argc, char *argv[])
     fclose(fout);
 
     ofdm_destroy(ofdm);
+
+    free(tx_bits_char);
 
     return 0;
 }

@@ -322,9 +322,9 @@ int main(int argc, char *argv[]) {
                 Nsamperframe, interleave_frames, Nbitsperframe);
     }
 
-    uint8_t tx_bits_char[Nbitsperframe];
-    short tx_scaled[Nsamperframe];
-    uint8_t txt_bits_char[ofdm_ntxtbits * interleave_frames];
+    uint8_t* tx_bits_char = (uint8_t*)malloc(Nbitsperframe);
+    short* tx_scaled = (short*)malloc(Nsamperframe * sizeof(short));
+    uint8_t* txt_bits_char = (uint8_t*)malloc(ofdm_ntxtbits * interleave_frames);
 
     for (i = 0; i < ofdm_ntxtbits * interleave_frames; i++) {
         txt_bits_char[i] = 0;
@@ -395,7 +395,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                uint16_t r[data_bits_per_frame];
+                uint16_t* r = (uint16_t*)malloc(data_bits_per_frame * sizeof(uint16_t));
 
                 ofdm_rand(r, data_bits_per_frame);
 
@@ -404,9 +404,11 @@ int main(int argc, char *argv[]) {
                         tx_bits_char[j * data_bits_per_frame + i] = r[i] > 16384;
                     }
                 }
+
+                free(r);
             }
 
-            complex float tx_sams[interleave_frames * Nsamperframe];
+            _Fcomplex* tx_sams = (_Fcomplex*)malloc(interleave_frames * Nsamperframe * sizeof(_Fcomplex));
             ofdm_ldpc_interleave_tx(ofdm, &ldpc, tx_sams, tx_bits_char, txt_bits_char, interleave_frames, ofdm_config);
 
             for (j = 0; j < interleave_frames; j++) {
@@ -416,6 +418,8 @@ int main(int argc, char *argv[]) {
 
                 fwrite(tx_scaled, sizeof (short), Nsamperframe, fout);
             }
+
+            free(tx_sams);
         } else {
             /* just modulate uncoded raw bits ------------------------------------*/
 
@@ -425,8 +429,8 @@ int main(int argc, char *argv[]) {
                    it can interoperate with ofdm_tx.m/ofdm_rx.m */
 
                 int Npayloadbits = Nbitsperframe - (ofdm_nuwbits + ofdm_ntxtbits);
-                uint16_t r[Npayloadbits];
-                uint8_t payload_bits[Npayloadbits];
+                uint16_t* r = (uint16_t*)malloc(Npayloadbits * sizeof(uint16_t));
+                uint8_t* payload_bits = (uint8_t*)malloc(Npayloadbits);
 
                 ofdm_rand(r, Npayloadbits);
 
@@ -434,16 +438,20 @@ int main(int argc, char *argv[]) {
                     payload_bits[i] = r[i] > 16384;
                 }
 
-                uint8_t txt_bits[ofdm_ntxtbits];
+                uint8_t* txt_bits = (uint8_t*)malloc(ofdm_ntxtbits);
 
                 for (i = 0; i < ofdm_ntxtbits; i++) {
                     txt_bits[i] = 0;
                 }
 
                 ofdm_assemble_modem_frame(ofdm, tx_bits_char, payload_bits, txt_bits);
+
+                free(r);
+                free(payload_bits);
+                free(txt_bits);
             }
 
-            int tx_bits[Nbitsperframe];
+            int* tx_bits = (int*)malloc(Nbitsperframe * sizeof(int));
 
             for (i = 0; i < Nbitsperframe; i++) {
                 tx_bits[i] = tx_bits_char[i];
@@ -456,7 +464,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            COMP tx_sams[Nsamperframe];
+        COMP* tx_sams = (COMP*)malloc(Nsamperframe * sizeof(COMP));
             ofdm_mod(ofdm, tx_sams, tx_bits);
 
 	    if (verbose >=3) {
@@ -472,6 +480,9 @@ int main(int argc, char *argv[]) {
                 tx_scaled[i] = tx_sams[i].real * OFDM_AMP_SCALE;
 
             fwrite(tx_scaled, sizeof (short), Nsamperframe, fout);
+            
+            free(tx_bits);
+            free(tx_sams);
         }
 
         frame++;
@@ -490,6 +501,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "%d frames processed\n", frame);
 
     ofdm_destroy(ofdm);
+
+    free(tx_bits_char);
+    free(tx_scaled);
+    free(txt_bits_char);
 
     return 0;
 }

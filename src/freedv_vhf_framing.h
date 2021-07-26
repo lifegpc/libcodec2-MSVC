@@ -37,6 +37,7 @@
 #define _FREEDV_VHF_FRAMING_H
 
 #include "freedv_data_channel.h"
+#include "dllexport.h"
 
 /* Standard frame type */
 #define FREEDV_VHF_FRAME_A 1    /* 2400A/B Frame */
@@ -65,33 +66,33 @@ struct freedv_vhf_deframer {
 };
 
 /* Init and allocate memory for a freedv-vhf framer/deframer */
-struct freedv_vhf_deframer * fvhff_create_deframer(uint8_t frame_type,int enable_bit_flip);
+CODEC2_PUBLIC struct freedv_vhf_deframer * fvhff_create_deframer(uint8_t frame_type,int enable_bit_flip);
 
 /* Get size of various frame parameters */
 /* Frame size in bits */
-int fvhff_get_frame_size(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC int fvhff_get_frame_size(struct freedv_vhf_deframer * def);
 /* Codec2 size in bytes */
-int fvhff_get_codec2_size(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC int fvhff_get_codec2_size(struct freedv_vhf_deframer * def);
 /* Protocol bits in bits */
-int fvhff_get_proto_size(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC int fvhff_get_proto_size(struct freedv_vhf_deframer * def);
 /* Varicode bits in bits */
-int fvhff_get_varicode_size(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC int fvhff_get_varicode_size(struct freedv_vhf_deframer * def);
 
 /* Free the memory used by a freedv-vhf framer/deframer */
-void fvhff_destroy_deframer(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC void fvhff_destroy_deframer(struct freedv_vhf_deframer * def);
 
 /* Place codec and other bits into a frame */
-void fvhff_frame_bits(int frame_type,uint8_t bits_out[],uint8_t codec2_in[],uint8_t proto_in[],uint8_t vc_in[]);
-void fvhff_frame_data_bits(struct freedv_vhf_deframer * def, int frame_type,uint8_t bits_out[]);
+CODEC2_PUBLIC void fvhff_frame_bits(int frame_type,uint8_t bits_out[],uint8_t codec2_in[],uint8_t proto_in[],uint8_t vc_in[]);
+CODEC2_PUBLIC void fvhff_frame_data_bits(struct freedv_vhf_deframer * def, int frame_type,uint8_t bits_out[]);
 
 /* Find and extract frames from a stream of bits */
-int fvhff_deframe_bits(struct freedv_vhf_deframer * def,uint8_t codec2_out[],uint8_t proto_out[],uint8_t vc_out[],uint8_t bits_in[]);
+CODEC2_PUBLIC int fvhff_deframe_bits(struct freedv_vhf_deframer * def,uint8_t codec2_out[],uint8_t proto_out[],uint8_t vc_out[],uint8_t bits_in[]);
 
 /* Is the de-framer synchronized? */
-int fvhff_synchronized(struct freedv_vhf_deframer * def);
+CODEC2_PUBLIC int fvhff_synchronized(struct freedv_vhf_deframer * def);
 
 /* Search for a complete UW in a buffer of bits */
-size_t fvhff_search_uw(const uint8_t bits[],size_t nbits,
+CODEC2_PUBLIC size_t fvhff_search_uw(const uint8_t bits[],size_t nbits,
   const uint8_t uw[],    size_t uw_len,
   size_t * delta_out,    size_t bits_per_sym);
 

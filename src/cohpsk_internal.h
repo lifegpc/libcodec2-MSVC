@@ -41,6 +41,7 @@
 
 #include "fdmdv_internal.h"
 #include "kiss_fft.h"
+#include "dllexport.h"
 
 struct COHPSK {
     COMP         ch_fdm_frame_buf[NSW*NSYMROWPILOT*COHPSK_M];  /* buffer of several frames of symbols from channel      */
@@ -110,17 +111,17 @@ struct COHPSK {
     int            freq_est_mode_reduced;
 };
 
-void bits_to_qpsk_symbols(COMP tx_symb[][COHPSK_NC*COHPSK_ND], int tx_bits[], int nbits);
-void qpsk_symbols_to_bits(struct COHPSK *coh, float rx_bits[], COMP ct_symb_buf[][COHPSK_NC*COHPSK_ND]);
-void tx_filter_and_upconvert_coh(COMP tx_fdm[], int Nc, const COMP tx_symbols[],
+CODEC2_PUBLIC void bits_to_qpsk_symbols(COMP tx_symb[][COHPSK_NC*COHPSK_ND], int tx_bits[], int nbits);
+CODEC2_PUBLIC void qpsk_symbols_to_bits(struct COHPSK *coh, float rx_bits[], COMP ct_symb_buf[][COHPSK_NC*ND]);
+CODEC2_PUBLIC void tx_filter_and_upconvert_coh(COMP tx_fdm[], int Nc, const COMP tx_symbols[],
                                  COMP tx_filter_memory[COHPSK_NC][COHPSK_NSYM],
                                  COMP phase_tx[], COMP freq[],
                                  COMP *fbb_phase, COMP fbb_rect);
-void fdm_downconvert_coh(COMP rx_baseband[COHPSK_NC][COHPSK_M+COHPSK_M/P], int Nc, COMP rx_fdm[], COMP phase_rx[], COMP freq[], int nin);
-void rx_filter_coh(COMP rx_filt[COHPSK_NC+1][P+1], int Nc, COMP rx_baseband[COHPSK_NC+1][COHPSK_M+COHPSK_M/P], COMP rx_filter_memory[COHPSK_NC+1][COHPSK_NFILTER], int nin);
-void frame_sync_fine_freq_est(struct COHPSK *coh, COMP ch_symb[][COHPSK_NC*COHPSK_ND], int sync, int *next_sync);
-void fine_freq_correct(struct COHPSK *coh, int sync, int next_sync);
-int sync_state_machine(struct COHPSK *coh, int sync, int next_sync);
-int cohpsk_fs_offset(COMP out[], COMP in[], int n, float sample_rate_ppm);
+CODEC2_PUBLIC void fdm_downconvert_coh(COMP rx_baseband[COHPSK_NC][COHPSK_M+COHPSK_M/P], int Nc, COMP rx_fdm[], COMP phase_rx[], COMP freq[], int nin);
+CODEC2_PUBLIC void rx_filter_coh(COMP rx_filt[COHPSK_NC+1][P+1], int Nc, COMP rx_baseband[COHPSK_NC+1][COHPSK_M+COHPSK_M/P], COMP rx_filter_memory[COHPSK_NC+1][COHPSK_NFILTER], int nin);
+CODEC2_PUBLIC void frame_sync_fine_freq_est(struct COHPSK *coh, COMP ch_symb[][COHPSK_NC*COHPSK_ND], int sync, int *next_sync);
+CODEC2_PUBLIC void fine_freq_correct(struct COHPSK *coh, int sync, int next_sync);
+CODEC2_PUBLIC int sync_state_machine(struct COHPSK *coh, int sync, int next_sync);
+CODEC2_PUBLIC int cohpsk_fs_offset(COMP out[], COMP in[], int n, float sample_rate_ppm);
 
 #endif

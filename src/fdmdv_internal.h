@@ -32,6 +32,7 @@
 #include "comp.h"
 #include "codec2_fdmdv.h"
 #include "codec2_fft.h"
+#include "dllexport.h"
 
 /*---------------------------------------------------------------------------*\
 
@@ -166,32 +167,32 @@ struct FDMDV {
 
 \*---------------------------------------------------------------------------*/
 
-void bits_to_dqpsk_symbols(COMP tx_symbols[], int Nc, COMP prev_tx_symbols[], int tx_bits[], int *pilot_bit, int old_qpsk_mapping);
-void tx_filter(COMP tx_baseband[NC+1][M_FAC], int Nc, COMP tx_symbols[], COMP tx_filter_memory[NC+1][NSYM]);
-void fdm_upconvert(COMP tx_fdm[], int Nc, COMP tx_baseband[NC+1][M_FAC], COMP phase_tx[], COMP freq_tx[],
+CODEC2_PUBLIC void bits_to_dqpsk_symbols(COMP tx_symbols[], int Nc, COMP prev_tx_symbols[], int tx_bits[], int *pilot_bit, int old_qpsk_mapping);
+CODEC2_PUBLIC void tx_filter(COMP tx_baseband[NC+1][M_FAC], int Nc, COMP tx_symbols[], COMP tx_filter_memory[NC+1][NSYM]);
+CODEC2_PUBLIC void fdm_upconvert(COMP tx_fdm[], int Nc, COMP tx_baseband[NC+1][M_FAC], COMP phase_tx[], COMP freq_tx[],
                    COMP *fbb_phase, COMP fbb_rect);
-void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
+CODEC2_PUBLIC void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
                              COMP tx_filter_memory[NC+1][NSYM],
                              COMP phase_tx[], COMP freq[], COMP *fbb_phase, COMP fbb_rect);
-void generate_pilot_fdm(COMP *pilot_fdm, int *bit, float *symbol, float *filter_mem, COMP *phase, COMP *freq);
-void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq);
-float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft);
-void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[], COMP pilot_lpf[], codec2_fft_cfg fft_pilot_cfg, COMP S[], int nin, int do_fft);
-void fdm_downconvert(COMP rx_baseband[NC+1][M_FAC+M_FAC/P], int Nc, COMP rx_fdm[], COMP phase_rx[], COMP freq[], int nin);
-void rxdec_filter(COMP rx_fdm_filter[], COMP rx_fdm[], COMP rxdec_lpf_mem[], int nin);
-void rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_baseband[NC+1][M_FAC+M_FAC/P], COMP rx_filter_memory[NC+1][NFILTER], int nin);
-void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
+CODEC2_PUBLIC void generate_pilot_fdm(COMP *pilot_fdm, int *bit, float *symbol, float *filter_mem, COMP *phase, COMP *freq);
+CODEC2_PUBLIC void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq);
+CODEC2_PUBLIC float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft);
+CODEC2_PUBLIC void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[], COMP pilot_lpf[], codec2_fft_cfg fft_pilot_cfg, COMP S[], int nin, int do_fft);
+CODEC2_PUBLIC void fdm_downconvert(COMP rx_baseband[NC+1][M_FAC+M_FAC/P], int Nc, COMP rx_fdm[], COMP phase_rx[], COMP freq[], int nin);
+CODEC2_PUBLIC void rxdec_filter(COMP rx_fdm_filter[], COMP rx_fdm[], COMP rxdec_lpf_mem[], int nin);
+CODEC2_PUBLIC void rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_baseband[NC+1][M_FAC+M_FAC/P], COMP rx_filter_memory[NC+1][NFILTER], int nin);
+CODEC2_PUBLIC void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
                                 COMP rx_fdm_mem[], COMP phase_rx[], COMP freq[],
                                 float freq_pol[], int nin, int dec_rate);
-float rx_est_timing(COMP  rx_symbols[], int Nc,
+CODEC2_PUBLIC float rx_est_timing(COMP  rx_symbols[], int Nc,
 		    COMP  rx_filt[NC+1][P+1],
 		    COMP  rx_filter_mem_timing[NC+1][NT*P],
 		    float env[],
 		    int   nin,
                     int   m);
-float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[], COMP prev_rx_symbols[], COMP rx_symbols[], int old_qpsk_mapping);
-void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_difference[]);
-int freq_state(int *reliable_sync_bit, int sync_bit, int *state, int *timer, int *sync_mem);
-float calc_snr(int Nc, float sig_est[], float noise_est[]);
+CODEC2_PUBLIC float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[], COMP prev_rx_symbols[], COMP rx_symbols[], int old_qpsk_mapping);
+CODEC2_PUBLIC void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_difference[]);
+CODEC2_PUBLIC int freq_state(int *reliable_sync_bit, int sync_bit, int *state, int *timer, int *sync_mem);
+CODEC2_PUBLIC float calc_snr(int Nc, float sig_est[], float noise_est[]);
 
 #endif

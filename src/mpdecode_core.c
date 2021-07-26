@@ -641,7 +641,7 @@ void Somap(float  bit_likelihood[],      /* number_bits, bps*number_symbols */
 {
     int    M=QPSK_CONSTELLATION_SIZE, bps = QPSK_BITS_PER_SYMBOL;
     int    n,i,j,k,mask;
-    float num[bps], den[bps];
+    float* num = (float*)malloc(bps * sizeof(float)), * den = (float*)malloc(bps * sizeof(float));
     float metric;
 
     for (n=0; n<number_symbols; n++) { /* loop over symbols */
@@ -675,20 +675,26 @@ void Somap(float  bit_likelihood[],      /* number_bits, bps*number_symbols */
             bit_likelihood[bps*n+k] = num[k] - den[k];
         }
     }
+
+    free(num);
+    free(den);
 }
 
 
 void symbols_to_llrs(float llr[], COMP rx_qpsk_symbols[], float rx_amps[], float EsNo, float mean_amp, int nsyms) {
     int i;
 
-    float symbol_likelihood[nsyms*QPSK_CONSTELLATION_SIZE];
-    float bit_likelihood[nsyms*QPSK_BITS_PER_SYMBOL];
+    float* symbol_likelihood = (float*)malloc(nsyms * QPSK_CONSTELLATION_SIZE * sizeof(float));
+    float* bit_likelihood = (float*)malloc(nsyms * QPSK_BITS_PER_SYMBOL * sizeof(float));
 
     Demod2D(symbol_likelihood, rx_qpsk_symbols, S_matrix, EsNo, rx_amps, mean_amp, nsyms);
     Somap(bit_likelihood, symbol_likelihood, nsyms);
     for(i=0; i<nsyms*QPSK_BITS_PER_SYMBOL; i++) {
         llr[i] = -bit_likelihood[i];
     }
+
+    free(symbol_likelihood);
+    free(bit_likelihood);
 }
 
 void ldpc_print_info(struct LDPC *ldpc) {

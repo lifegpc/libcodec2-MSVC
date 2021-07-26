@@ -35,6 +35,10 @@
                                 many bits, sets frame size for rx
                                 processing */
 
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
+
 int main(int argc,char *argv[]){
     int bitcnt, framecnt;
     int i;

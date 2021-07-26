@@ -71,12 +71,19 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 #include "fsk.h"
 #include "comp_prim.h"
 #include "kiss_fftr.h"
 #include "modem_probe.h"
+
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
 
 /*---------------------------------------------------------------------------*\
 
@@ -547,7 +554,7 @@ void fsk_demod_freq_est(struct FSK *fsk, COMP fsk_in[],float *freqs,int M){
     float tc;
     int imax;
     kiss_fft_cfg fft_cfg = fsk->fft_cfg;
-    int freqi[M];
+    int* freqi = (int*)malloc(M * sizeof(int));
     int f_min,f_max,f_zero;
     
     /* Array to do complex FFT from using kiss_fft */
@@ -674,6 +681,7 @@ void fsk_demod_freq_est(struct FSK *fsk, COMP fsk_in[],float *freqs,int M){
     free(fftin);
     free(fftout);
     #endif
+    free(freqi);
 }
 
 void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]){
@@ -690,14 +698,14 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     float ft1;
     int nstash = fsk->nstash;
     
-    COMP* f_int[M];     /* Filtered and downsampled symbol tones */
-    COMP t[M];          /* complex number temps */
+    COMP** f_int = (COMP**)malloc(M * sizeof(void*));     /* Filtered and downsampled symbol tones */
+    COMP* t = (COMP*)malloc(M * sizeof(COMP));          /* complex number temps */
     COMP t_c;           /* another complex temp */
-    COMP phi_c[M];  
+    COMP* phi_c = (COMP*)malloc(M * sizeof(COMP));
     COMP phi_ft;        
     int nold = Nmem-nin;
     
-    COMP dphi[M];
+    COMP* dphi = (COMP*)malloc(M * sizeof(COMP));
     COMP dphift;
     float rx_timing,norm_rx_timing,old_norm_rx_timing,d_norm_rx_timing,appm;
     int using_old_samps;
@@ -705,7 +713,7 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     COMP* sample_src;
     COMP* f_intbuf_m;
     
-    float f_est[M],fc_avg,fc_tx;
+    float* f_est = (float*)malloc(M * sizeof(float)), fc_avg, fc_tx;
     float meanebno,stdebno,eye_max;
     int neyesamp,neyeoffset;
     
@@ -876,6 +884,11 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     /* Check for NaNs in the fine timing estimate, return if found */
     /* otherwise segfaults happen */
     if( isnan(t_c.real) || isnan(t_c.imag)){
+        free(f_int);
+        free(t);
+        free(phi_c);
+        free(dphi);
+        free(f_est);
         return;
     } 
 
@@ -915,7 +928,7 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     int high_sample = (int)ceilf(rx_timing);
  
     /* Vars for finding the max-of-4 for each bit */
-    float tmax[M];
+    float* tmax = (float*)malloc(M * sizeof(float));
     
     #ifdef EST_EBNO
     meanebno = 0;
@@ -1105,6 +1118,12 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     }
     free(f_intbuf_m);
     #endif
+    free(f_int);
+    free(t);
+    free(phi_c);
+    free(dphi);
+    free(f_est);
+    free(tmax);
 }
 
 void fsk_demod(struct FSK *fsk, uint8_t rx_bits[], COMP fsk_in[]){
@@ -1122,7 +1141,7 @@ void fsk_mod(struct FSK *fsk,float fsk_out[],uint8_t tx_bits[]){
     int Ts = fsk->Ts;               /* samples-per-symbol */
     int Fs = fsk->Fs;               /* sample freq */
     int M = fsk->mode;
-    COMP dosc_f[M];                 /* phase shift per sample */
+    COMP* dosc_f = (COMP*)malloc(M * sizeof(COMP));                 /* phase shift per sample */
     COMP dph;                       /* phase shift of current bit */
     size_t i,j,m,bit_i,sym;
     
@@ -1157,6 +1176,7 @@ void fsk_mod(struct FSK *fsk,float fsk_out[],uint8_t tx_bits[]){
     /* save TX phase */
     fsk->tx_phase_c = tx_phase_c;
     
+    free(dosc_f);
 }
 
 void fsk_mod_c(struct FSK *fsk,COMP fsk_out[],uint8_t tx_bits[]){
@@ -1166,7 +1186,7 @@ void fsk_mod_c(struct FSK *fsk,COMP fsk_out[],uint8_t tx_bits[]){
     int Ts = fsk->Ts;               /* samples-per-symbol */
     int Fs = fsk->Fs;               /* sample freq */
     int M = fsk->mode;
-    COMP dosc_f[M];                 /* phase shift per sample */
+    COMP* dosc_f = (COMP*)malloc(M * sizeof(dosc_f));                 /* phase shift per sample */
     COMP dph;                       /* phase shift of current bit */
     size_t i,j,bit_i,sym;
     int m;
@@ -1201,6 +1221,7 @@ void fsk_mod_c(struct FSK *fsk,COMP fsk_out[],uint8_t tx_bits[]){
     /* save TX phase */
     fsk->tx_phase_c = tx_phase_c;
     
+    free(dosc_f);
 }
 
 

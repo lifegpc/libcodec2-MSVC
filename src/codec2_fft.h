@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "dllexport.h"
 
 #ifdef FDV_ARM_MATH
   #include "fdv_arm_math.h"
@@ -72,10 +73,10 @@ static inline void codec2_fftri(codec2_fftr_cfg cfg, codec2_fft_cpx* in, codec2_
 
 }
 
-codec2_fft_cfg codec2_fft_alloc(int nfft, int inverse_fft, void* mem, size_t* lenmem);
-codec2_fftr_cfg codec2_fftr_alloc(int nfft, int inverse_fft, void* mem, size_t* lenmem);
-void codec2_fft_free(codec2_fft_cfg cfg);
-void codec2_fftr_free(codec2_fftr_cfg cfg);
+CODEC2_PUBLIC codec2_fft_cfg codec2_fft_alloc(int nfft, int inverse_fft, void* mem, size_t* lenmem);
+CODEC2_PUBLIC codec2_fftr_cfg codec2_fftr_alloc(int nfft, int inverse_fft, void* mem, size_t* lenmem);
+CODEC2_PUBLIC void codec2_fft_free(codec2_fft_cfg cfg);
+CODEC2_PUBLIC void codec2_fftr_free(codec2_fftr_cfg cfg);
 
 
 static inline void codec2_fft(codec2_fft_cfg cfg, codec2_fft_cpx* in, codec2_fft_cpx* out)
@@ -98,7 +99,7 @@ static inline void codec2_fft(codec2_fft_cfg cfg, codec2_fft_cpx* in, codec2_fft
 #endif
 }
 
-void codec2_fft_inplace(codec2_fft_cfg cfg, codec2_fft_cpx* inout);
+CODEC2_PUBLIC void codec2_fft_inplace(codec2_fft_cfg cfg, codec2_fft_cpx* inout);
 
 
 #endif

@@ -86,11 +86,11 @@ int main(int argc, char *argv[])
     int   n = c2const.n_samp;
     int   m = c2const.m_pitch;
     FILE *fin,*fout;
-    short buf[n];
-    float Sn[m];	        /* float input speech samples */
+    short* buf = (short*)malloc(n * sizeof(short));
+    float* Sn = (float*)malloc(m * sizeof(float));	        /* float input speech samples */
     kiss_fft_cfg  fft_fwd_cfg;
     COMP  Sw[FFT_ENC];	        /* DFT of Sn[] */
-    float w[m];	                /* time domain hamming window */
+    float* w = (float*)malloc(m * sizeof(float));	                /* time domain hamming window */
     COMP  W[FFT_ENC];	        /* DFT of w[] */
     float pitch_samples;
     int   i;
@@ -104,6 +104,9 @@ int main(int argc, char *argv[])
 
     if ((fin = fopen(argv[1],"rb")) == NULL) {
       printf("Error opening input speech file: %s\n",argv[1]);
+      free(buf);
+      free(Sn);
+      free(w);
       exit(1);
     }
 
@@ -111,6 +114,9 @@ int main(int argc, char *argv[])
 
     if ((fout = fopen(argv[2],"wt")) == NULL) {
       printf("Error opening output text file: %s\n",argv[2]);
+      free(buf);
+      free(Sn);
+      free(w);
       exit(1);
     }
 
@@ -157,6 +163,10 @@ int main(int argc, char *argv[])
     if (dump) dump_off();
     #endif
     nlp_destroy(nlp_states);
+
+    free(buf);
+    free(Sn);
+    free(w);
 
     return 0;
 }

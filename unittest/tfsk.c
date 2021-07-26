@@ -193,13 +193,14 @@ int main(int argc,char *argv[]){
             while( fread(modbuf,sizeof(float),fsk_nin(fsk),fin) == fsk_nin(fsk) ){
                 /* DR 21/11/16 temp code during port to complex */
                 int n = fsk_nin(fsk);
-                COMP modbuf_comp[n];
+                COMP* modbuf_comp = (COMP*)malloc(n * sizeof(COMP));
                 for(i=0; i<n; i++) {
                     modbuf_comp[i].real = modbuf[i];
                     modbuf_comp[i].imag = 0.0;
                 }
                 fsk_demod(fsk,bitbuf,modbuf_comp);
                 fwrite(bitbuf,sizeof(uint8_t),fsk->Nbits,fout);
+                free(modbuf_comp);
             }
         }
         /* Demod after channel imp. and mod */
@@ -209,13 +210,14 @@ int main(int argc,char *argv[]){
             while( modbufp < modbuf + modbufsize){
                 /* DR 21/11/16 temp code during port to complex */
                 int n = fsk_nin(fsk);
-                COMP modbuf_comp[n];
+                COMP* modbuf_comp = (COMP*)malloc(n * sizeof(COMP));
                 for(i=0; i<n; i++) {
                     modbuf_comp[i].real = modbuf[i];
                     modbuf_comp[i].imag = 0.0;
                 }
                 fsk_demod(fsk,bitbuf,modbuf_comp);
                 modbufp += fsk_nin(fsk);
+                free(modbuf_comp);
             }
         }
         free(bitbuf);

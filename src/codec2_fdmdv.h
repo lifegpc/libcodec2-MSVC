@@ -42,6 +42,8 @@
 extern "C" {
 #endif
 
+#include "dllexport.h"
+
 /* set up the calling convention for DLL function import/export for
    WIN32 cross compiling */
 
@@ -77,33 +79,33 @@ extern "C" {
 
 struct FDMDV;
 
-struct FDMDV * fdmdv_create(int Nc);
-void           fdmdv_destroy(struct FDMDV *fdmdv_state);
-void           fdmdv_use_old_qpsk_mapping(struct FDMDV *fdmdv_state);
-int            fdmdv_bits_per_frame(struct FDMDV *fdmdv_state);
-float          fdmdv_get_fsep(struct FDMDV *fdmdv_state);
-void           fdmdv_set_fsep(struct FDMDV *fdmdv_state, float fsep);
+CODEC2_PUBLIC struct FDMDV * fdmdv_create(int Nc);
+CODEC2_PUBLIC void           fdmdv_destroy(struct FDMDV *fdmdv_state);
+CODEC2_PUBLIC void           fdmdv_use_old_qpsk_mapping(struct FDMDV *fdmdv_state);
+CODEC2_PUBLIC int            fdmdv_bits_per_frame(struct FDMDV *fdmdv_state);
+CODEC2_PUBLIC float          fdmdv_get_fsep(struct FDMDV *fdmdv_state);
+CODEC2_PUBLIC void           fdmdv_set_fsep(struct FDMDV *fdmdv_state, float fsep);
 
-void           fdmdv_mod(struct FDMDV *fdmdv_state, COMP tx_fdm[], int tx_bits[], int *sync_bit);
-void           fdmdv_demod(struct FDMDV *fdmdv_state, int rx_bits[], int *reliable_sync_bit, COMP rx_fdm[], int *nin);
+CODEC2_PUBLIC void           fdmdv_mod(struct FDMDV *fdmdv_state, COMP tx_fdm[], int tx_bits[], int *sync_bit);
+CODEC2_PUBLIC void           fdmdv_demod(struct FDMDV *fdmdv_state, int rx_bits[], int *reliable_sync_bit, COMP rx_fdm[], int *nin);
 
-void           fdmdv_get_test_bits(struct FDMDV *fdmdv_state, int tx_bits[]);
-int            fdmdv_error_pattern_size(struct FDMDV *fdmdv_state);
-void           fdmdv_put_test_bits(struct FDMDV *f, int *sync, short error_pattern[], int *bit_errors, int *ntest_bits, int rx_bits[]);
+CODEC2_PUBLIC void           fdmdv_get_test_bits(struct FDMDV *fdmdv_state, int tx_bits[]);
+CODEC2_PUBLIC int            fdmdv_error_pattern_size(struct FDMDV *fdmdv_state);
+CODEC2_PUBLIC void           fdmdv_put_test_bits(struct FDMDV *f, int *sync, short error_pattern[], int *bit_errors, int *ntest_bits, int rx_bits[]);
 
-void           fdmdv_get_demod_stats(struct FDMDV *fdmdv_state, struct MODEM_STATS *stats);
+CODEC2_PUBLIC void           fdmdv_get_demod_stats(struct FDMDV *fdmdv_state, struct MODEM_STATS *stats);
 
-void           fdmdv_8_to_16(float out16k[], float in8k[], int n);
-void           fdmdv_8_to_16_short(short out16k[], short in8k[], int n);
-void           fdmdv_16_to_8(float out8k[], float in16k[], int n);
-void           fdmdv_16_to_8_short(short out8k[], short in16k[], int n);
+CODEC2_PUBLIC void           fdmdv_8_to_16(float out16k[], float in8k[], int n);
+CODEC2_PUBLIC void           fdmdv_8_to_16_short(short out16k[], short in8k[], int n);
+CODEC2_PUBLIC void           fdmdv_16_to_8(float out8k[], float in16k[], int n);
+CODEC2_PUBLIC void           fdmdv_16_to_8_short(short out8k[], short in16k[], int n);
 
-void           fdmdv_freq_shift(COMP rx_fdm_fcorr[], COMP rx_fdm[], float foff, COMP *foff_phase_rect, int nin);
+CODEC2_PUBLIC void           fdmdv_freq_shift(COMP rx_fdm_fcorr[], COMP rx_fdm[], float foff, COMP *foff_phase_rect, int nin);
 
 /* debug/development function(s) */
 
-void fdmdv_dump_osc_mags(struct FDMDV *f);
-void fdmdv_simulate_channel(float *sig_pwr_av, COMP samples[], int nin, float target_snr);
+CODEC2_PUBLIC void fdmdv_dump_osc_mags(struct FDMDV *f);
+CODEC2_PUBLIC void fdmdv_simulate_channel(float *sig_pwr_av, COMP samples[], int nin, float target_snr);
 
 #ifdef __cplusplus
 }

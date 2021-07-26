@@ -167,9 +167,9 @@ int main(int argc, char *argv[]) {
     }
     
     int   max_demod_in = horus_get_max_demod_in(hstates);
-    short demod_in[max_demod_in];
+    short* demod_in = (short*)malloc(max_demod_in * sizeof(short));
     int   max_ascii_out = horus_get_max_ascii_out_len(hstates);
-    char  ascii_out[max_ascii_out];
+    char* ascii_out = (char*)malloc(max_ascii_out * sizeof(char));
     
     /* Main loop ----------------------------------------------------------------------- */
 
@@ -255,6 +255,9 @@ int main(int argc, char *argv[]) {
     }
     
     horus_close(hstates);
+    
+    free(demod_in);
+    free(ascii_out);
 
     return 0;
 }

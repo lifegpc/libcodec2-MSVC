@@ -167,9 +167,9 @@ int main(int argc, char *argv[])
     CodeLength = ldpc.CodeLength;                    /* length of entire codeword */
     NumberParityBits = ldpc.NumberParityBits;
     data_bits_per_frame = ldpc.NumberRowsHcols;
-    unsigned char ibits[data_bits_per_frame];
-    unsigned char pbits[NumberParityBits];
-    uint8_t out_char[CodeLength];
+    unsigned char* ibits = (unsigned char*)malloc(data_bits_per_frame * sizeof(unsigned char));
+    unsigned char* pbits = (unsigned char*)malloc(NumberParityBits * sizeof(unsigned char));
+    uint8_t* out_char = (uint8_t*)malloc(CodeLength * sizeof(uint8_t));
 
     testframes = 0;
     total_iters = 0;
@@ -218,6 +218,9 @@ int main(int argc, char *argv[])
         else if ( (fin = fopen(argv[1],"rb")) == NULL ) {
             fprintf(stderr, "Error opening input SD file: %s: %s.\n",
                     argv[1], strerror(errno));
+            free(ibits);
+            free(pbits);
+            free(out_char);
             exit(1);
         }
         
@@ -225,6 +228,9 @@ int main(int argc, char *argv[])
         else if ( (fout = fopen(argv[2],"wb")) == NULL ) {
             fprintf(stderr, "Error opening output bit file: %s: %s.\n",
                     argv[2], strerror(errno));
+            free(ibits);
+            free(pbits);
+            free(out_char);
             exit(1);
         }
 
@@ -246,7 +252,7 @@ int main(int argc, char *argv[])
         }
         if (opt_exists(argv, argc, "--testframes")) {
             testframes = 1;
-            uint16_t r[data_bits_per_frame];
+            uint16_t* r = (uint16_t*)malloc(data_bits_per_frame * sizeof(uint16_t));
             ofdm_rand(r, data_bits_per_frame);
 
             for(i=0; i<data_bits_per_frame-unused_data_bits; i++) {
@@ -256,6 +262,8 @@ int main(int argc, char *argv[])
                 ibits[i] = 1;
             }
             encode(&ldpc, ibits, pbits);  
+            
+            free(r);
        }
 
         double *input_double = calloc(CodeLength, sizeof(double));
@@ -296,14 +304,15 @@ int main(int argc, char *argv[])
 
                 /* insert unused data LLRs */
 
-                float llr_tmp[CodeLength];
+                float* llr_tmp = (float*)malloc(CodeLength * sizeof(float));
                 for(i=0; i<data_bits_per_frame-unused_data_bits; i++)
                     llr_tmp[i] = input_float[i];  // rx data bits
                 for(i=data_bits_per_frame-unused_data_bits; i<data_bits_per_frame; i++)
                     llr_tmp[i] = -10.0;           // known data bits high likelhood
                 for(i=data_bits_per_frame; i<CodeLength; i++)
                     llr_tmp[i] = input_float[i-unused_data_bits];  // rx parity bits
-                memcpy(input_float, llr_tmp, sizeof(float)*CodeLength);                
+                memcpy(input_float, llr_tmp, sizeof(float)*CodeLength);  
+                free(llr_tmp);
             }
 
             iter = run_ldpc_decoder(&ldpc, out_char, input_float, &parityCheckCount);
@@ -382,12 +391,20 @@ int main(int argc, char *argv[])
         float coded_ber = (float)Terrs/(Tbits+1E-12);
         fprintf(stderr, "Coded Tbits: %d Terr: %d BER: %4.3f\n", Tbits, Terrs, coded_ber);
 
+        free(ibits);
+        free(pbits);
+        free(out_char);
+
         /* set return code for Ctest */
         if (coded_ber < 0.01)
             return 0;
         else
             return 1;
     }
+
+    free(ibits);
+    free(pbits);
+    free(out_char);
     
     return 0;
 }

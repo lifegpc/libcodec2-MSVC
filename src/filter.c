@@ -17,14 +17,22 @@
 
 #include <stdlib.h>
 #include <string.h>
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 #include <complex.h>
 
 #include "filter.h"
 #include "filter_coef.h"
 #include "debug_alloc.h"
+#include "complex_win32.h"
 
+#ifndef _MSC_VER
 #define cmplx(value) (cosf(value) + sinf(value) * I)
+#else
+#define cmplx(value) (_FCbuild(cosf(value), sinf(value)))
+#endif
 
 /*
  * This is a library of filter functions. They were copied from Quisk and converted to single precision.
@@ -46,8 +54,8 @@ void quisk_filt_cfInit(struct quisk_cfFilter * filter, float * coefs, int taps) 
     // be real or complex.
     filter->dCoefs = coefs;
     filter->cpxCoefs = NULL;
-    filter->cSamples = (complex float *)MALLOC(taps * sizeof(complex float));
-    memset(filter->cSamples, 0, taps * sizeof(complex float));
+    filter->cSamples = (_Fcomplex*)MALLOC(taps * sizeof(_Fcomplex));
+    memset(filter->cSamples, 0, taps * sizeof(_Fcomplex));
     filter->ptcSamp = filter->cSamples;
     filter->nTaps = taps;
     filter->cBuf = NULL;
@@ -97,13 +105,13 @@ void quisk_filt_destroy(struct quisk_cfFilter * filter) {
 
 \*---------------------------------------------------------------------------*/
 
-int quisk_cfInterpDecim(complex float * cSamples, int count, struct quisk_cfFilter * filter, int interp, int decim) {
+int quisk_cfInterpDecim(_Fcomplex * cSamples, int count, struct quisk_cfFilter * filter, int interp, int decim) {
     // Interpolate by interp, and then decimate by decim.
     // This uses the float coefficients of filter (not the complex).  Samples are complex.
     int i, k, nOut;
     float * ptCoef;
-    complex float * ptSample;
-    complex float csample;
+    _Fcomplex * ptSample;
+    _Fcomplex csample;
 
     if (count > filter->nBuf) {    // increase size of sample buffer
         filter->nBuf = count * 2;
@@ -111,10 +119,10 @@ int quisk_cfInterpDecim(complex float * cSamples, int count, struct quisk_cfFilt
         if (filter->cBuf)
             FREE(filter->cBuf);
 
-        filter->cBuf = (complex float *)MALLOC(filter->nBuf * sizeof(complex float));
+        filter->cBuf = (_Fcomplex*)MALLOC(filter->nBuf * sizeof(_Fcomplex));
     }
 
-    memcpy(filter->cBuf, cSamples, count * sizeof(complex float));
+    memcpy(filter->cBuf, cSamples, count * sizeof(_Fcomplex));
     nOut = 0;
 
     for (i = 0; i < count; i++) {
@@ -124,16 +132,28 @@ int quisk_cfInterpDecim(complex float * cSamples, int count, struct quisk_cfFilt
         while (filter->decim_index < interp) {
             ptSample = filter->ptcSamp;
             ptCoef = filter->dCoefs + filter->decim_index;
+#ifndef _MSC_VER
             csample = 0;
+#else
+            csample = _FCbuild(0, 0);
+#endif
 
             for (k = 0; k < filter->nTaps / interp; k++, ptCoef += interp) {
+#ifndef _MSC_VER
                 csample += *ptSample * *ptCoef;
+#else
+                csample = fcadd(csample, _FCmulcr(*ptSample, *ptCoef));
+#endif
 
                 if (--ptSample < filter->cSamples)
                     ptSample = filter->cSamples + filter->nTaps - 1;
             }
 
-            cSamples[nOut] = csample * interp;
+#ifndef _MSC_VER
+            cSamples[nOut] = csample * interp
+#else
+            cSamples[nOut] = _FCmulcr(csample, interp);
+#endif
             nOut++;
             filter->decim_index += decim;
         }
@@ -229,14 +249,18 @@ void quisk_cfTune(struct quisk_cfFilter * filter, float freq) {
     int i;
 
     if ( ! filter->cpxCoefs)
-        filter->cpxCoefs = (complex float *)MALLOC(filter->nTaps * sizeof(complex float));
+        filter->cpxCoefs = (_Fcomplex*)MALLOC(filter->nTaps * sizeof(_Fcomplex));
 
     tune = 2.0 * M_PI * freq;
     D = (filter->nTaps - 1.0) / 2.0;
 
     for (i = 0; i < filter->nTaps; i++) {
         float tval = tune * (i - D);
+#ifndef _MSC_VER
         filter->cpxCoefs[i] = cmplx(tval) * filter->dCoefs[i];
+#else
+        filter->cpxCoefs[i] = _FCmulcr(cmplx(tval), filter->dCoefs[i]);
+#endif
     }
 }
 
@@ -253,20 +277,28 @@ void quisk_cfTune(struct quisk_cfFilter * filter, float freq) {
 
 \*---------------------------------------------------------------------------*/
 
-void quisk_ccfFilter(complex float * inSamples, complex float * outSamples, int count, struct quisk_cfFilter * filter) {
+void quisk_ccfFilter(_Fcomplex* inSamples, _Fcomplex* outSamples, int count, struct quisk_cfFilter * filter) {
     int i, k;
-    complex float * ptSample;
-    complex float * ptCoef;
-    complex float accum;
+    _Fcomplex * ptSample;
+    _Fcomplex * ptCoef;
+    _Fcomplex accum;
 
     for (i = 0; i < count; i++) {
         *filter->ptcSamp = inSamples[i];
+#ifndef _MSC_VER
         accum = 0;
+#else
+        accum = _FCbuild(0, 0);
+#endif
         ptSample = filter->ptcSamp;
         ptCoef = filter->cpxCoefs;
 
         for (k = 0; k < filter->nTaps; k++, ptCoef++) {
+#ifndef _MSC_VER
             accum += *ptSample  *  *ptCoef;
+#else
+            accum = fcadd(accum, _FCmulcc(*ptSample, *ptCoef));
+#endif
 
             if (--ptSample < filter->cSamples)
                 ptSample = filter->cSamples + filter->nTaps - 1;

@@ -29,15 +29,16 @@
 #define __LPC__
 
 #define LPC_MAX_ORDER 20
+#include "dllexport.h"
 
-void pre_emp(float Sn_pre[], float Sn[], float *mem, int Nsam);
-void de_emp(float Sn_se[], float Sn[], float *mem, int Nsam);
-void hanning_window(float Sn[],	float Wn[], int Nsam);
-void autocorrelate(float Sn[], float Rn[], int Nsam, int order);
-void levinson_durbin(float R[],	float lpcs[], int order);
-void inverse_filter(float Sn[], float a[], int Nsam, float res[], int order);
-void synthesis_filter(float res[], float a[], int Nsam,	int order, float Sn_[]);
-void find_aks(float Sn[], float a[], int Nsam, int order, float *E);
-void weight(float ak[],	float gamma, int order,	float akw[]);
+CODEC2_PUBLIC void pre_emp(float Sn_pre[], float Sn[], float *mem, int Nsam);
+CODEC2_PUBLIC void de_emp(float Sn_se[], float Sn[], float *mem, int Nsam);
+CODEC2_PUBLIC void hanning_window(float Sn[],	float Wn[], int Nsam);
+CODEC2_PUBLIC void autocorrelate(float Sn[], float Rn[], int Nsam, int order);
+CODEC2_PUBLIC void levinson_durbin(float R[],	float lpcs[], int order);
+CODEC2_PUBLIC void inverse_filter(float Sn[], float a[], int Nsam, float res[], int order);
+CODEC2_PUBLIC void synthesis_filter(float res[], float a[], int Nsam,	int order, float Sn_[]);
+CODEC2_PUBLIC void find_aks(float Sn[], float a[], int Nsam, int order, float *E);
+CODEC2_PUBLIC void weight(float ak[],	float gamma, int order,	float akw[]);
 
 #endif

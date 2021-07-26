@@ -36,6 +36,7 @@
   
 #include "comp.h"
 #include "modem_stats.h"
+#include "dllexport.h"
 
 /* Defines */
 
@@ -61,41 +62,41 @@ struct OFDM;
 
 /* create and destroy modem states */
 
-struct OFDM *ofdm_create(const struct OFDM_CONFIG * config);
-void ofdm_destroy(struct OFDM *);
+CODEC2_PUBLIC struct OFDM *ofdm_create(const struct OFDM_CONFIG * config);
+CODEC2_PUBLIC void ofdm_destroy(struct OFDM *);
 
 /* signal processing */
 
-void ofdm_mod(struct OFDM *, COMP *, const int *);
-void ofdm_demod(struct OFDM *, int *, COMP *);
-void ofdm_demod_shorts(struct OFDM *, int *, short *, float);
-int  ofdm_sync_search(struct OFDM *, COMP *);
-int  ofdm_sync_search_shorts(struct OFDM *, short *, float);
-void ofdm_sync_state_machine(struct OFDM *, uint8_t *);
+CODEC2_PUBLIC void ofdm_mod(struct OFDM *, COMP *, const int *);
+CODEC2_PUBLIC void ofdm_demod(struct OFDM *, int *, COMP *);
+CODEC2_PUBLIC void ofdm_demod_shorts(struct OFDM *, int *, short *, float);
+CODEC2_PUBLIC int  ofdm_sync_search(struct OFDM *, COMP *);
+CODEC2_PUBLIC int  ofdm_sync_search_shorts(struct OFDM *, short *, float);
+CODEC2_PUBLIC void ofdm_sync_state_machine(struct OFDM *, uint8_t *);
 
 /* getters */
     
-struct OFDM_CONFIG *ofdm_get_config_param(void);
-int ofdm_get_nin(struct OFDM *);
-int ofdm_get_samples_per_frame(void);
-int ofdm_get_max_samples_per_frame(void);
-int ofdm_get_bits_per_frame(void);
-void ofdm_get_demod_stats(struct OFDM *ofdm, struct MODEM_STATS *stats);
-int ofdm_get_phase_est_bandwidth_mode(struct OFDM *ofdm);
+CODEC2_PUBLIC struct OFDM_CONFIG *ofdm_get_config_param(void);
+CODEC2_PUBLIC int ofdm_get_nin(struct OFDM *);
+CODEC2_PUBLIC int ofdm_get_samples_per_frame(void);
+CODEC2_PUBLIC int ofdm_get_max_samples_per_frame(void);
+CODEC2_PUBLIC int ofdm_get_bits_per_frame(void);
+CODEC2_PUBLIC void ofdm_get_demod_stats(struct OFDM *ofdm, struct MODEM_STATS *stats);
+CODEC2_PUBLIC int ofdm_get_phase_est_bandwidth_mode(struct OFDM *ofdm);
 
 /* option setters */
 
-void ofdm_set_verbose(struct OFDM *, int);
-void ofdm_set_timing_enable(struct OFDM *, bool);
-void ofdm_set_foff_est_enable(struct OFDM *, bool);
-void ofdm_set_phase_est_enable(struct OFDM *, bool);
-void ofdm_set_phase_est_bandwidth_mode(struct OFDM *ofdm, int val);
-void ofdm_set_off_est_hz(struct OFDM *, float);
-void ofdm_set_sync(struct OFDM *, int);
-void ofdm_set_tx_bpf(struct OFDM *, bool);
-void ofdm_set_dpsk(struct OFDM *ofdm, bool val);
+CODEC2_PUBLIC void ofdm_set_verbose(struct OFDM *, int);
+CODEC2_PUBLIC void ofdm_set_timing_enable(struct OFDM *, bool);
+CODEC2_PUBLIC void ofdm_set_foff_est_enable(struct OFDM *, bool);
+CODEC2_PUBLIC void ofdm_set_phase_est_enable(struct OFDM *, bool);
+CODEC2_PUBLIC void ofdm_set_phase_est_bandwidth_mode(struct OFDM *ofdm, int val);
+CODEC2_PUBLIC void ofdm_set_off_est_hz(struct OFDM *, float);
+CODEC2_PUBLIC void ofdm_set_sync(struct OFDM *, int);
+CODEC2_PUBLIC void ofdm_set_tx_bpf(struct OFDM *, bool);
+CODEC2_PUBLIC void ofdm_set_dpsk(struct OFDM *ofdm, bool val);
     
-void ofdm_print_info(struct OFDM *);
+CODEC2_PUBLIC void ofdm_print_info(struct OFDM *);
 
 #ifdef __cplusplus
 }
